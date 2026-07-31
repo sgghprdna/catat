@@ -30,16 +30,12 @@
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     
     <style>
-        input[type="text"], input[type="number"], input[type="tel"], input[type="date"] { font-size: 16px; }
+        input[type="text"], input[type="number"], input[type="tel"], input[type="date"], input[type="password"] { font-size: 16px; }
         * { -webkit-tap-highlight-color: transparent; }
         
-        .accordion-content {
-            transition: max-height 0.4s ease-in-out, opacity 0.3s ease-in-out;
-            max-height: 0;
-            opacity: 0;
-            overflow: hidden;
-        }
-        .accordion-content.expanded { max-height: 3500px; opacity: 1; }
+        .accordion-content { transition: max-height 0.4s ease-in-out, opacity 0.3s ease-in-out; max-height: 0; opacity: 0; overflow: hidden; }
+        .accordion-content.expanded { max-height: 3500px; opacity: 1; overflow: visible; }
+        
         .tab-content { display: none; animation: fadeIn 0.3s ease; }
         .tab-content.active { display: block; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
@@ -50,20 +46,13 @@
         .hidden-sheet .bottom-sheet-overlay { opacity: 0; }
         .hidden-sheet .bottom-sheet-content { transform: translateY(100%); }
 
-        .custom-checkbox {
-            appearance: none; width: 24px; height: 24px; border-radius: 6px;
-            display: inline-flex; align-items: center; justify-content: center;
-            cursor: pointer; transition: all 0.2s;
-        }
+        .custom-checkbox { appearance: none; width: 24px; height: 24px; border-radius: 6px; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.2s; border: 2px solid #cbd5e1; }
+        .dark .custom-checkbox { border-color: #475569; }
         .custom-checkbox:checked { background-color: #2563eb; border-color: #2563eb; }
         .custom-checkbox:checked::after { content: '✓'; color: white; font-weight: bold; font-size: 14px; }
         
-        .progress-striped {
-            background-image: linear-gradient(45deg, rgba(255,255,255,.15) 25%, transparent 25%, transparent 50%, rgba(255,255,255,.15) 50%, rgba(255,255,255,.15) 75%, transparent 75%, transparent);
-            background-size: 1rem 1rem;
-        }
+        .progress-striped { background-image: linear-gradient(45deg, rgba(255,255,255,.15) 25%, transparent 25%, transparent 50%, rgba(255,255,255,.15) 50%, rgba(255,255,255,.15) 75%, transparent 75%, transparent); background-size: 1rem 1rem; }
 
-        /* Shrink Header Effect */
         .header-transition { transition: all 0.3s ease; }
         .header-shrink { padding-top: 1rem !important; padding-bottom: 0.75rem !important; }
         .header-shrink .header-title-area { margin-bottom: 0 !important; }
@@ -71,21 +60,37 @@
         .header-shrink .header-logo i { font-size: 1.25rem; }
         .header-shrink h1 { font-size: 1.125rem; }
         .header-shrink .header-amount { font-size: 1.5rem; line-height: 1.2; margin-top: 0.25rem; }
+
+        .no-scrollbar::-webkit-scrollbar { display: none; } .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        
+        /* Privacy Mode Filter */
+        body.privacy-on .money-value { filter: blur(5px); opacity: 0.7; pointer-events: none; user-select: none; transition: filter 0.3s ease; }
+        
+        /* Fullscreen View transition */
+        .slide-up-view { transition: transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1); transform: translateY(100%); }
+        .slide-up-view.active { transform: translateY(0); }
+
+        /* Loader */
+        .loader-ring { display: inline-block; width: 20px; height: 20px; }
+        .loader-ring:after { content: " "; display: block; width: 16px; height: 16px; margin: 2px; border-radius: 50%; border: 2px solid #fff; border-color: #fff transparent #fff transparent; animation: loader-ring 1.2s linear infinite; }
+        @keyframes loader-ring { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
 </head>
 <body class="bg-slate-100 dark:bg-slate-900 text-slate-800 dark:text-slate-100 font-sans pb-28 min-h-screen relative transition-colors duration-300">
 
-    <!-- Header -->
     <header id="mainHeader" class="header-transition bg-gradient-to-br from-brand-600 to-brand-900 dark:from-slate-800 dark:to-slate-950 text-white pt-8 pb-6 px-5 shadow-lg rounded-b-3xl sticky top-0 z-20 transition-colors duration-300">
         <div class="max-w-md mx-auto">
             <div class="header-title-area flex justify-between items-start mb-4 transition-all">
                 <div class="flex items-center gap-3">
-                    <div class="header-logo bg-white/20 p-2 rounded-xl backdrop-blur-sm shadow-inner transition-all">
+                    <div class="header-logo bg-white/20 p-2 rounded-xl backdrop-blur-sm shadow-inner transition-all flex items-center justify-center">
                         <i class="ph ph-wallet text-2xl text-white"></i>
                     </div>
                     <div><h1 class="text-xl font-bold tracking-tight transition-all">Ngutang</h1></div>
                 </div>
                 <div class="flex items-center gap-1">
+                    <button onclick="togglePrivacyMode()" class="p-2 hover:bg-white/10 rounded-lg transition-colors">
+                        <i id="privacyIcon" class="ph-bold ph-eye text-xl sm:text-2xl"></i>
+                    </button>
                     <button onclick="toggleTheme()" class="p-2 hover:bg-white/10 rounded-lg transition-colors">
                         <i id="themeIcon" class="ph-fill ph-moon text-xl sm:text-2xl"></i>
                     </button>
@@ -95,23 +100,23 @@
                 </div>
             </div>
             
-            <div class="mt-2 transition-all">
+            <div class="mt-2 transition-all relative">
                 <p id="headerTitle" class="text-blue-100 dark:text-slate-400 text-[10px] font-semibold mb-0.5 uppercase tracking-wider">TOTAL NGUTANGIN</p>
-                <h2 id="totalGlobalDebt" class="header-amount text-3xl font-extrabold tracking-tight truncate transition-all">Rp 0</h2>
+                <h2 class="header-amount text-3xl font-extrabold tracking-tight truncate transition-all money-value" id="totalGlobalDebt">Rp 0</h2>
             </div>
         </div>
     </header>
 
-    <!-- Tabs 3 Pilihan -->
-    <div class="max-w-md mx-auto px-4 mt-6 mb-3">
-        <div class="flex bg-slate-200/70 dark:bg-slate-800 p-1.5 rounded-xl shadow-inner transition-colors duration-300">
-            <button onclick="switchTab('ngutangin')" id="tabBtn-ngutangin" class="flex-1 py-2 text-[11px] sm:text-sm font-bold rounded-lg bg-white dark:bg-slate-700 shadow-sm text-brand-700 dark:text-blue-300 transition-all">Ngutangin</button>
-            <button onclick="switchTab('utangSaya')" id="tabBtn-utangSaya" class="flex-1 py-2 text-[11px] sm:text-sm font-medium rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition-all">Utang Saya</button>
-            <button onclick="switchTab('history')" id="tabBtn-history" class="flex-1 py-2 text-[11px] sm:text-sm font-medium rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition-all">Riwayat</button>
+    <div class="max-w-md mx-auto px-4 mt-6 mb-3 overflow-x-auto no-scrollbar">
+        <div class="flex bg-slate-200/70 dark:bg-slate-800 p-1.5 rounded-xl shadow-inner transition-colors duration-300 min-w-max gap-1">
+            <button onclick="switchTab('ngutangin')" id="tabBtn-ngutangin" class="px-4 py-2 text-[11px] sm:text-sm font-bold rounded-lg transition-all">Ngutangin</button>
+            <button onclick="switchTab('utangSaya')" id="tabBtn-utangSaya" class="px-4 py-2 text-[11px] sm:text-sm font-bold rounded-lg transition-all">Utang Saya</button>
+            <button onclick="switchTab('history')" id="tabBtn-history" class="px-4 py-2 text-[11px] sm:text-sm font-bold rounded-lg transition-all">Riwayat</button>
+            <button onclick="switchTab('tool')" id="tabBtn-tool" class="px-4 py-2 text-[11px] sm:text-sm font-bold rounded-lg transition-all flex items-center gap-1"><i class="ph-bold ph-wrench"></i> Tool</button>
         </div>
     </div>
 
-    <!-- Area Pencarian & Filter (Hanya tampil di Ngutangin & Utang Saya) -->
+    <!-- Area Pencarian & Filter -->
     <div id="searchSortArea" class="max-w-md mx-auto px-4 mb-5 flex gap-2">
         <div class="relative flex-1">
             <span class="absolute left-3 top-2.5 text-slate-400"><i class="ph-bold ph-magnifying-glass"></i></span>
@@ -124,22 +129,43 @@
         </select>
     </div>
 
-    <main class="max-w-md mx-auto px-4 space-y-5">
-        <!-- Tab: Main List (Dipakai untuk Ngutangin dan Utang Saya) -->
+    <main class="max-w-md mx-auto px-4 space-y-5 relative">
+        <!-- Tab: Main List (Ngutangin & Utang Saya) -->
         <div id="tab-main" class="tab-content active space-y-4">
             <div id="mainList" class="space-y-4"></div>
         </div>
 
         <!-- Tab: History -->
         <div id="tab-history" class="tab-content space-y-4">
-            <div class="flex items-center bg-white dark:bg-slate-800 p-1.5 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm transition-colors duration-300">
-                <div class="pl-3 text-slate-400"><i class="ph-bold ph-funnel"></i></div>
-                <select id="historyFilter" onchange="renderHistory()" class="w-full bg-transparent border-none text-sm font-medium focus:ring-0 text-slate-700 dark:text-slate-200 py-2.5 px-2 outline-none appearance-none">
-                    <option value="all" class="text-slate-800 bg-white dark:bg-slate-700 dark:text-white">Semua Riwayat Transaksi</option>
-                </select>
-                <div class="pr-3 text-slate-400 pointer-events-none"><i class="ph-bold ph-caret-down text-sm"></i></div>
+            <div class="flex items-center justify-between mb-2">
+                <div class="flex-1 flex items-center bg-white dark:bg-slate-800 p-1.5 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm transition-colors duration-300">
+                    <div class="pl-3 text-slate-400"><i class="ph-bold ph-funnel"></i></div>
+                    <select id="historyFilter" onchange="renderHistory()" class="w-full bg-transparent border-none text-sm font-medium focus:ring-0 text-slate-700 dark:text-slate-200 py-2 px-2 outline-none appearance-none">
+                        <option value="all" class="text-slate-800 bg-white dark:bg-slate-700 dark:text-white">Semua Riwayat</option>
+                    </select>
+                    <div class="pr-3 text-slate-400 pointer-events-none"><i class="ph-bold ph-caret-down text-sm"></i></div>
+                </div>
+                <button onclick="clearHistory()" class="ml-2 bg-red-50 text-red-600 dark:bg-red-900/30 dark:text-red-400 p-2.5 rounded-xl border border-red-100 dark:border-red-800 hover:bg-red-100 transition-colors">
+                    <i class="ph-bold ph-trash"></i>
+                </button>
             </div>
             <div id="historyList" class="space-y-4"></div>
+        </div>
+
+        <!-- Tab: Tool -->
+        <div id="tab-tool" class="tab-content space-y-4">
+            <div onclick="openSplitBill()" class="bg-white dark:bg-slate-800 rounded-3xl p-5 border border-slate-200 dark:border-slate-700 shadow-sm flex items-center justify-between cursor-pointer hover:border-brand-400 transition-all group">
+                <div class="flex items-center gap-4">
+                    <div class="w-14 h-14 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-lg text-white group-hover:scale-105 transition-transform">
+                        <i class="ph-bold ph-receipt text-2xl"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-lg text-slate-800 dark:text-white leading-tight">AI Split Bill</h3>
+                        <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Bagi bon struk dengan teman</p>
+                    </div>
+                </div>
+                <i class="ph-bold ph-caret-right text-slate-300 dark:text-slate-600"></i>
+            </div>
         </div>
     </main>
 
@@ -153,7 +179,7 @@
         <div class="bottom-sheet-overlay absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onclick="closeSheet('addPersonSheet')"></div>
         <div class="bottom-sheet-content relative w-full max-w-md bg-white dark:bg-slate-800 rounded-t-3xl p-6 shadow-2xl transition-colors duration-300">
             <div class="w-12 h-1.5 bg-slate-200 dark:bg-slate-700 rounded-full mx-auto mb-6"></div>
-            <h3 class="text-xl font-bold mb-1 flex items-center gap-2 text-slate-800 dark:text-white"><i class="ph-fill ph-user-plus text-brand-500"></i> Teman Baru</h3>
+            <h3 class="text-xl font-bold mb-1 flex items-center gap-2 text-slate-800 dark:text-white"><i class="ph-fill ph-user-plus text-brand-500"></i> Tambah Orang</h3>
             <p id="addPersonSubtitle" class="text-xs text-slate-500 dark:text-slate-400 mb-5">Masuk ke daftar: Ngutangin</p>
             <form onsubmit="addPerson(event)" class="space-y-3">
                 <input type="text" id="newPersonName" placeholder="Nama Orang (contoh: Budi)" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3.5 focus:outline-none focus:ring-2 focus:ring-brand-500 text-slate-800 dark:text-slate-100 transition-all" required autocomplete="off"/>
@@ -163,43 +189,50 @@
                 </div>
                 <div class="relative">
                     <span class="absolute left-4 top-3.5 text-slate-400"><i class="ph-fill ph-note text-lg"></i></span>
-                    <input type="text" id="newPersonNotes" placeholder="Catatan / No. Rekening (Opsional)" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl pl-11 pr-4 py-3.5 focus:outline-none focus:ring-2 focus:ring-brand-500 text-slate-800 dark:text-slate-100 transition-all" autocomplete="off"/>
+                    <input type="text" id="newPersonNotes" placeholder="Catatan / No. Rek. (Opsional)" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl pl-11 pr-4 py-3.5 focus:outline-none focus:ring-2 focus:ring-brand-500 text-slate-800 dark:text-slate-100 transition-all" autocomplete="off"/>
                 </div>
-                <button type="submit" class="w-full mt-2 bg-brand-600 hover:bg-brand-700 text-white px-5 py-4 rounded-xl font-bold shadow-md transition-colors text-lg">Simpan Orang</button>
+                <button type="submit" class="w-full mt-2 bg-brand-600 hover:bg-brand-700 text-white px-5 py-4 rounded-xl font-bold shadow-md transition-colors text-lg">Simpan</button>
             </form>
         </div>
     </div>
 
-    <!-- Sheet: Add Item -->
+    <!-- Sheet: Add Bulk Items -->
     <div id="addItemSheet" class="fixed inset-0 z-50 flex items-end justify-center hidden-sheet">
         <div class="bottom-sheet-overlay absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onclick="closeSheet('addItemSheet')"></div>
-        <div class="bottom-sheet-content relative w-full max-w-md bg-white dark:bg-slate-800 rounded-t-3xl p-6 shadow-2xl transition-colors duration-300">
-            <div class="w-12 h-1.5 bg-slate-200 dark:bg-slate-700 rounded-full mx-auto mb-6"></div>
-            <h3 class="text-xl font-bold mb-1 flex items-center gap-2 text-slate-800 dark:text-white"><i class="ph-fill ph-receipt text-brand-500"></i> Tambah Catatan Bon</h3>
-            <p id="addItemPersonName" class="text-sm text-slate-500 dark:text-slate-400 mb-5">Untuk: -</p>
-            <form onsubmit="addItem(event)" class="space-y-4">
+        <div class="bottom-sheet-content relative w-full max-w-md bg-white dark:bg-slate-800 rounded-t-3xl p-6 shadow-2xl transition-colors duration-300 max-h-[90vh] flex flex-col">
+            <div class="w-12 h-1.5 bg-slate-200 dark:bg-slate-700 rounded-full mx-auto mb-6 shrink-0"></div>
+            <h3 class="text-xl font-bold mb-1 flex items-center gap-2 text-slate-800 dark:text-white shrink-0"><i class="ph-fill ph-receipt text-brand-500"></i> Catat Bon</h3>
+            <p id="addItemPersonName" class="text-sm text-slate-500 dark:text-slate-400 mb-4 shrink-0">Untuk: -</p>
+            
+            <div class="flex-1 overflow-y-auto no-scrollbar pb-4 space-y-4">
                 <input type="hidden" id="addItemPersonId">
+                <!-- Meta Global (Tanggal Bon & Jatuh Tempo) -->
                 <div class="flex gap-3">
-                    <div class="relative w-2/5">
-                        <span class="absolute left-3 top-3.5 text-slate-400"><i class="ph-fill ph-calendar-blank"></i></span>
-                        <input type="date" id="newItemDate" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl pl-9 pr-2 py-3.5 text-sm focus:ring-2 focus:ring-brand-500 text-slate-800 dark:text-slate-100" required/>
+                    <div class="relative flex-1">
+                        <span class="absolute left-3 top-3.5 text-slate-400"><i class="ph-fill ph-calendar-blank"></i> Tgl Bon</span>
+                        <input type="date" id="globalItemDate" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl pl-20 pr-2 py-3.5 text-sm focus:ring-2 focus:ring-brand-500 text-slate-800 dark:text-slate-100" required/>
                     </div>
-                    <input type="text" id="newItemName" placeholder="Pesanan (cth: Nasi Goreng)" class="flex-1 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3.5 focus:ring-2 focus:ring-brand-500 text-slate-800 dark:text-slate-100" required autocomplete="off"/>
-                </div>
-                
-                <!-- Due date opsional -->
-                <div class="relative">
-                    <span class="absolute left-4 top-3.5 text-slate-400"><i class="ph-fill ph-clock-countdown text-lg"></i></span>
-                    <input type="date" id="newItemDueDate" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl pl-11 pr-4 py-3.5 text-sm text-slate-500 focus:ring-2 focus:ring-brand-500 dark:text-slate-400" />
-                    <span class="absolute right-4 top-4 text-[10px] uppercase font-bold text-slate-400 pointer-events-none">Jatuh Tempo (Opsional)</span>
+                    <div class="relative flex-1">
+                        <span class="absolute left-3 top-3.5 text-slate-400"><i class="ph-fill ph-clock-countdown"></i> Tenggat</span>
+                        <input type="date" id="globalItemDueDate" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl pl-20 pr-2 py-3.5 text-sm focus:ring-2 focus:ring-brand-500 text-slate-500 dark:text-slate-400" />
+                    </div>
                 </div>
 
-                <div class="relative">
-                    <span class="absolute left-4 top-3.5 text-slate-500 font-bold">Rp</span>
-                    <input type="text" inputmode="numeric" oninput="formatPriceInput(this)" id="newItemPrice" placeholder="15.000" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl pl-12 pr-4 py-3.5 text-lg font-bold focus:ring-2 focus:ring-brand-500 text-slate-800 dark:text-slate-100" required autocomplete="off"/>
+                <div class="w-full h-px bg-slate-200 dark:bg-slate-700"></div>
+                
+                <!-- Container Multiple Items -->
+                <div id="bulkItemsContainer" class="space-y-3">
+                    <!-- Dinamis terisi dari JS -->
                 </div>
-                <button type="submit" class="w-full bg-brand-600 hover:bg-brand-700 text-white px-5 py-4 rounded-xl font-bold shadow-md transition-colors text-lg">Catat Bon</button>
-            </form>
+
+                <button type="button" onclick="addBulkItemRow()" class="w-full py-3 bg-slate-100 dark:bg-slate-900 border border-dashed border-slate-300 dark:border-slate-700 rounded-xl text-slate-600 dark:text-slate-400 font-bold text-sm hover:bg-slate-200 transition-colors flex items-center justify-center gap-2">
+                    <i class="ph-bold ph-plus"></i> Tambah Item Lain
+                </button>
+            </div>
+
+            <div class="shrink-0 pt-3 bg-white dark:bg-slate-800 border-t border-slate-100 dark:border-slate-700 mt-2">
+                <button onclick="saveBulkItems()" class="w-full bg-brand-600 hover:bg-brand-700 text-white px-5 py-4 rounded-xl font-bold shadow-md transition-colors text-lg">Simpan Semua</button>
+            </div>
         </div>
     </div>
 
@@ -217,7 +250,7 @@
                 <input type="hidden" id="payMaxAmount">
                 
                 <div>
-                    <label class="block text-xs font-bold text-slate-400 uppercase mb-2">Uang yang dibayarkan</label>
+                    <label class="block text-xs font-bold text-slate-400 uppercase mb-2">Nominal Uang</label>
                     <div class="relative">
                         <span class="absolute left-4 top-3.5 text-brand-600 dark:text-brand-400 font-bold">Rp</span>
                         <input type="text" inputmode="numeric" oninput="formatPriceInput(this); calculatePaymentFeedback();" id="payAmountInput" class="w-full bg-brand-50 dark:bg-slate-900 border-2 border-brand-200 dark:border-brand-700 rounded-xl pl-12 pr-4 py-3.5 text-2xl font-bold focus:ring-brand-500 text-brand-700 dark:text-brand-300 transition-colors" required autocomplete="off"/>
@@ -250,61 +283,222 @@
             <h3 class="text-xl font-bold text-slate-800 dark:text-slate-100 mb-5">Pengaturan</h3>
             
             <div class="space-y-3">
+                <button onclick="togglePINSetup()" class="w-full flex items-center justify-between gap-4 p-4 bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-2xl hover:bg-slate-100 transition-colors">
+                    <div class="flex items-center gap-4 text-slate-700 dark:text-slate-200">
+                        <i class="ph-fill ph-lock-key text-3xl"></i>
+                        <div class="text-left"><div class="font-bold">Kunci Aplikasi (PIN)</div><div id="pinStatusText" class="text-xs opacity-80 mt-0.5">Mati</div></div>
+                    </div>
+                    <i class="ph-bold ph-caret-right text-slate-400"></i>
+                </button>
+
                 <button id="installBtn" class="hidden w-full flex items-center gap-4 p-4 bg-purple-50 dark:bg-purple-900/30 border border-purple-100 dark:border-purple-800 rounded-2xl text-purple-700 dark:text-purple-400 hover:bg-purple-100 text-left transition-colors">
                     <i class="ph-fill ph-download text-3xl"></i>
                     <div><div class="font-bold">Instal Aplikasi</div><div class="text-xs opacity-80 mt-0.5">Tambahkan ke layar utama HP</div></div>
                 </button>
 
-                <button onclick="exportData()" class="w-full flex items-center gap-4 p-4 bg-blue-50 dark:bg-brand-900/30 border border-blue-100 dark:border-brand-800 rounded-2xl text-brand-700 dark:text-brand-400 hover:bg-blue-100 text-left transition-colors">
-                    <i class="ph-bold ph-export text-3xl"></i>
-                    <div><div class="font-bold">Backup Data (Export)</div><div class="text-xs opacity-80 mt-0.5">Simpan ke file aman</div></div>
-                </button>
+                <div class="grid grid-cols-2 gap-3">
+                    <button onclick="exportData()" class="flex flex-col items-center justify-center p-4 bg-blue-50 dark:bg-brand-900/30 border border-blue-100 dark:border-brand-800 rounded-2xl text-brand-700 dark:text-brand-400 hover:bg-blue-100 transition-colors text-center">
+                        <i class="ph-bold ph-export text-2xl mb-1"></i>
+                        <div class="font-bold text-sm">Backup (Export)</div>
+                    </button>
+                    <label class="flex flex-col items-center justify-center p-4 bg-emerald-50 dark:bg-emerald-900/30 border border-emerald-100 dark:border-emerald-800 rounded-2xl text-emerald-700 dark:text-emerald-400 hover:bg-emerald-100 cursor-pointer transition-colors text-center">
+                        <i class="ph-bold ph-import text-2xl mb-1"></i>
+                        <div class="font-bold text-sm">Restore (Import)</div>
+                        <input type="file" id="importFile" accept=".json" class="hidden" onchange="importData(event)" />
+                    </label>
+                </div>
                 
-                <label class="w-full flex items-center gap-4 p-4 bg-emerald-50 dark:bg-emerald-900/30 border border-emerald-100 dark:border-emerald-800 rounded-2xl text-emerald-700 dark:text-emerald-400 hover:bg-emerald-100 text-left transition-colors cursor-pointer">
-                    <i class="ph-bold ph-import text-3xl"></i>
-                    <div><div class="font-bold">Restore Data (Import)</div><div class="text-xs opacity-80 mt-0.5">Kembalikan data dari file</div></div>
-                    <input type="file" id="importFile" accept=".json" class="hidden" onchange="importData(event)" />
-                </label>
-                
-                <button onclick="triggerClearData()" class="w-full flex items-center gap-4 p-4 bg-red-50 dark:bg-red-900/30 border border-red-100 dark:border-red-900 rounded-2xl text-red-600 dark:text-red-400 hover:bg-red-100 text-left mt-4 transition-colors">
-                    <i class="ph-bold ph-trash text-3xl"></i><div class="font-bold">Hapus Semua Data</div>
+                <button onclick="triggerClearData()" class="w-full flex items-center justify-center gap-2 p-4 bg-red-50 dark:bg-red-900/30 border border-red-100 dark:border-red-900 rounded-2xl text-red-600 dark:text-red-400 hover:bg-red-100 text-center mt-2 transition-colors">
+                    <i class="ph-bold ph-trash text-xl"></i><div class="font-bold text-sm">Hapus Semua Data</div>
                 </button>
             </div>
         </div>
     </div>
 
-    <!-- Dialog Kustom -->
+    
+    <!-- PIN Setup / Unlock Modal (Fullscreen Overlay) -->
+    <div id="pinOverlay" class="fixed inset-0 bg-slate-100 dark:bg-slate-900 z-[999] hidden flex flex-col items-center justify-center transition-opacity duration-300">
+        <div class="text-center w-full max-w-sm px-6">
+            <div class="w-16 h-16 bg-brand-100 dark:bg-brand-900/30 rounded-full flex items-center justify-center mx-auto mb-4 text-brand-600 dark:text-brand-400">
+                <i class="ph-fill ph-lock-key text-3xl"></i>
+            </div>
+            <h2 id="pinTitle" class="text-2xl font-bold text-slate-800 dark:text-white mb-2">Masukkan PIN</h2>
+            <p id="pinSubtitle" class="text-sm text-slate-500 mb-8">Masukkan 4 digit PIN Anda.</p>
+            
+            <div class="flex justify-center gap-4 mb-10">
+                <div class="w-4 h-4 rounded-full bg-slate-300 dark:bg-slate-700 pin-dot transition-all"></div>
+                <div class="w-4 h-4 rounded-full bg-slate-300 dark:bg-slate-700 pin-dot transition-all"></div>
+                <div class="w-4 h-4 rounded-full bg-slate-300 dark:bg-slate-700 pin-dot transition-all"></div>
+                <div class="w-4 h-4 rounded-full bg-slate-300 dark:bg-slate-700 pin-dot transition-all"></div>
+            </div>
+
+            <div class="grid grid-cols-3 gap-4 max-w-[260px] mx-auto">
+                <!-- Generates numbers 1-9 via JS for simplicity, but written here for layout -->
+                <button onclick="pressPin('1')" class="w-16 h-16 rounded-full bg-white dark:bg-slate-800 shadow-sm border border-slate-200 dark:border-slate-700 text-2xl font-bold text-slate-800 dark:text-white active:bg-slate-200 mx-auto">1</button>
+                <button onclick="pressPin('2')" class="w-16 h-16 rounded-full bg-white dark:bg-slate-800 shadow-sm border border-slate-200 dark:border-slate-700 text-2xl font-bold text-slate-800 dark:text-white active:bg-slate-200 mx-auto">2</button>
+                <button onclick="pressPin('3')" class="w-16 h-16 rounded-full bg-white dark:bg-slate-800 shadow-sm border border-slate-200 dark:border-slate-700 text-2xl font-bold text-slate-800 dark:text-white active:bg-slate-200 mx-auto">3</button>
+                <button onclick="pressPin('4')" class="w-16 h-16 rounded-full bg-white dark:bg-slate-800 shadow-sm border border-slate-200 dark:border-slate-700 text-2xl font-bold text-slate-800 dark:text-white active:bg-slate-200 mx-auto">4</button>
+                <button onclick="pressPin('5')" class="w-16 h-16 rounded-full bg-white dark:bg-slate-800 shadow-sm border border-slate-200 dark:border-slate-700 text-2xl font-bold text-slate-800 dark:text-white active:bg-slate-200 mx-auto">5</button>
+                <button onclick="pressPin('6')" class="w-16 h-16 rounded-full bg-white dark:bg-slate-800 shadow-sm border border-slate-200 dark:border-slate-700 text-2xl font-bold text-slate-800 dark:text-white active:bg-slate-200 mx-auto">6</button>
+                <button onclick="pressPin('7')" class="w-16 h-16 rounded-full bg-white dark:bg-slate-800 shadow-sm border border-slate-200 dark:border-slate-700 text-2xl font-bold text-slate-800 dark:text-white active:bg-slate-200 mx-auto">7</button>
+                <button onclick="pressPin('8')" class="w-16 h-16 rounded-full bg-white dark:bg-slate-800 shadow-sm border border-slate-200 dark:border-slate-700 text-2xl font-bold text-slate-800 dark:text-white active:bg-slate-200 mx-auto">8</button>
+                <button onclick="pressPin('9')" class="w-16 h-16 rounded-full bg-white dark:bg-slate-800 shadow-sm border border-slate-200 dark:border-slate-700 text-2xl font-bold text-slate-800 dark:text-white active:bg-slate-200 mx-auto">9</button>
+                
+                <button id="pinCancelBtn" onclick="cancelPinSetup()" class="w-16 h-16 rounded-full text-slate-400 font-bold mx-auto flex items-center justify-center invisible">Batal</button>
+                <button onclick="pressPin('0')" class="w-16 h-16 rounded-full bg-white dark:bg-slate-800 shadow-sm border border-slate-200 dark:border-slate-700 text-2xl font-bold text-slate-800 dark:text-white active:bg-slate-200 mx-auto">0</button>
+                <button onclick="deletePin()" class="w-16 h-16 rounded-full text-slate-500 mx-auto flex items-center justify-center text-2xl"><i class="ph-bold ph-backspace"></i></button>
+            </div>
+            
+            <button id="pinRemoveBtn" onclick="removePin()" class="mt-8 text-red-500 font-bold text-sm hidden">Matikan Kunci PIN</button>
+        </div>
+    </div>
+
+    <!-- UI: Split Bill Full View -->
+    <div id="splitBillView" class="fixed inset-0 bg-slate-100 dark:bg-slate-900 z-[60] flex flex-col slide-up-view">
+        <header class="bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 p-4 flex items-center justify-between shrink-0">
+            <button onclick="closeSplitBill()" class="p-2 -ml-2 rounded-lg text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700">
+                <i class="ph-bold ph-x text-xl"></i>
+            </button>
+            <h2 class="font-bold text-lg text-slate-800 dark:text-white">AI Split Bill</h2>
+            <button onclick="openSplitSettings()" class="p-2 -mr-2 rounded-lg text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700">
+                <i class="ph-bold ph-gear text-xl"></i>
+            </button>
+        </header>
+        
+        <div class="flex-1 overflow-y-auto p-4 no-scrollbar">
+            <!-- Alert No API -->
+            <div id="apiAlert" class="bg-orange-50 dark:bg-orange-900/30 border border-orange-200 dark:border-orange-800 rounded-xl p-3 mb-4 flex gap-3 text-sm hidden">
+                <i class="ph-fill ph-warning-circle text-orange-500 text-xl shrink-0"></i>
+                <div class="text-orange-700 dark:text-orange-300">
+                    Fitur Scan Struk AI tidak aktif. Klik ikon <i class="ph-bold ph-gear inline"></i> di atas untuk memasukkan API Key Gemini.
+                </div>
+            </div>
+
+            <!-- Add Buttons -->
+            <div class="grid grid-cols-2 gap-3 mb-6">
+                <label class="bg-indigo-50 dark:bg-indigo-900/30 border border-indigo-200 dark:border-indigo-800 rounded-2xl p-4 flex flex-col items-center justify-center text-indigo-700 dark:text-indigo-400 cursor-pointer hover:bg-indigo-100 transition-colors text-center shadow-sm relative" id="btnScanImage">
+                    <i class="ph-bold ph-camera text-3xl mb-2"></i>
+                    <span class="font-bold text-sm">Scan Struk</span>
+                    <input type="file" accept="image/*" id="receiptInput" class="hidden" onchange="processReceipt(event)">
+                </label>
+                <button onclick="addManualSplitItem()" class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl p-4 flex flex-col items-center justify-center text-slate-700 dark:text-slate-300 hover:bg-slate-50 transition-colors text-center shadow-sm">
+                    <i class="ph-bold ph-pencil-simple text-3xl mb-2"></i>
+                    <span class="font-bold text-sm">Input Manual</span>
+                </button>
+            </div>
+
+            <!-- List of Split Items -->
+            <h3 class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Daftar Barang (Klik untuk pilih orang)</h3>
+            <div id="splitItemsList" class="space-y-3 pb-20">
+                <div class="text-center p-8 text-slate-400 border border-dashed border-slate-300 dark:border-slate-700 rounded-2xl text-sm italic">
+                    Belum ada barang ditambahkan.
+                </div>
+            </div>
+        </div>
+        
+        <div class="shrink-0 p-4 bg-white dark:bg-slate-800 border-t border-slate-200 dark:border-slate-700 shadow-[0_-4px_10px_rgba(0,0,0,0.05)]">
+            <button id="btnFinishSplit" onclick="finalizeSplitBill()" class="w-full bg-brand-600 hover:bg-brand-700 text-white font-bold py-3.5 rounded-xl shadow-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+                Hitung & Simpan Tagihan
+            </button>
+        </div>
+        
+        <!-- Loading Overlay for AI -->
+        <div id="aiLoading" class="absolute inset-0 bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm z-50 flex flex-col items-center justify-center hidden">
+            <div class="loader-ring border-brand-500 !border-t-brand-500/30 w-12 h-12"></div>
+            <p class="mt-4 font-bold text-slate-700 dark:text-slate-200">AI sedang membaca struk...</p>
+        </div>
+    </div>
+
+    <!-- Sheet: Assign People for Split Bill -->
+    <div id="assignSplitSheet" class="fixed inset-0 z-[70] flex items-end justify-center hidden-sheet">
+        <div class="bottom-sheet-overlay absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onclick="closeSheet('assignSplitSheet')"></div>
+        <div class="bottom-sheet-content relative w-full max-w-md bg-white dark:bg-slate-800 rounded-t-3xl p-6 shadow-2xl transition-colors duration-300 max-h-[85vh] flex flex-col">
+            <div class="w-12 h-1.5 bg-slate-200 dark:bg-slate-700 rounded-full mx-auto mb-4 shrink-0"></div>
+            <h3 class="text-lg font-bold text-slate-800 dark:text-white mb-1">Siapa yang patungan?</h3>
+            <p id="assignItemName" class="text-brand-600 dark:text-brand-400 font-bold mb-4 shrink-0 border-b border-slate-100 dark:border-slate-700 pb-2">Item</p>
+            
+            <div class="flex-1 overflow-y-auto no-scrollbar space-y-2 mb-4" id="assignPeopleList">
+                <!-- Checkboxes populated via JS -->
+            </div>
+            
+            <div class="shrink-0 flex gap-2">
+                <input type="text" id="assignNewName" placeholder="Tambah nama baru..." class="flex-1 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-3 text-sm focus:ring-2 focus:ring-brand-500 text-slate-800 dark:text-slate-100" autocomplete="off">
+                <button type="button" onclick="addTempPersonSplit()" class="bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 px-4 rounded-xl font-bold text-sm"><i class="ph-bold ph-plus"></i></button>
+            </div>
+            <button onclick="saveAssignSplit()" class="w-full bg-brand-600 text-white font-bold py-3.5 rounded-xl mt-4">Selesai Memilih</button>
+        </div>
+    </div>
+
+    <!-- Sheet: Split Bill API Settings -->
+    <div id="splitSettingsSheet" class="fixed inset-0 z-[70] flex items-end justify-center hidden-sheet">
+        <div class="bottom-sheet-overlay absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onclick="closeSheet('splitSettingsSheet')"></div>
+        <div class="bottom-sheet-content relative w-full max-w-md bg-white dark:bg-slate-800 rounded-t-3xl p-6 shadow-2xl transition-colors duration-300">
+            <div class="w-12 h-1.5 bg-slate-200 dark:bg-slate-700 rounded-full mx-auto mb-4"></div>
+            <h3 class="text-xl font-bold text-slate-800 dark:text-white mb-4"><i class="ph-fill ph-gear"></i> Pengaturan AI</h3>
+            
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-xs font-bold text-slate-500 mb-1">Gemini API Key</label>
+                    <input type="password" id="apiKeyInput" placeholder="AIzaSy..." class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-3 text-sm focus:ring-2 focus:ring-brand-500 text-slate-800 dark:text-slate-100 font-mono">
+                    <p class="text-[10px] text-slate-400 mt-1">Key tersimpan aman di browser Anda.</p>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-500 mb-1">Model AI</label>
+                    <select id="apiModelSelect" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-3 text-sm focus:ring-2 focus:ring-brand-500 text-slate-800 dark:text-slate-100">
+                        <option value="gemini-1.5-flash">Gemini 3.5 Flash Lite (Utama, Cepat)</option>
+                        <option value="gemini-1.5-pro">Gemini 3.5 Flash (Untuk struk pudar)</option>
+                        <option value="gemini-1.0-pro">Gemini 2.5 Pro / 3.1 Pro (Overkill)</option>
+                    </select>
+                </div>
+                <div class="flex gap-2 pt-2">
+                    <button onclick="testApiKey()" class="flex-1 bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-200 font-bold py-3 rounded-xl text-sm border border-slate-200 dark:border-slate-600 transition-colors hover:bg-slate-200">
+                        Test API Key
+                    </button>
+                    <button onclick="saveApiSettings()" class="flex-1 bg-brand-600 text-white font-bold py-3 rounded-xl text-sm transition-colors hover:bg-brand-700">
+                        Simpan
+                    </button>
+                </div>
+                <div id="testApiResult" class="text-xs font-bold text-center mt-2 h-4"></div>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- Dialog Kustom Umum -->
     <div id="customDialogOverlay" class="fixed inset-0 bg-slate-900/70 z-[100] hidden flex items-center justify-center p-4 backdrop-blur-sm opacity-0 transition-opacity">
         <div id="customDialogBox" class="bg-white dark:bg-slate-800 w-full max-w-sm rounded-3xl p-6 shadow-2xl transform scale-95 transition-all duration-300">
             <h3 id="dialogTitle" class="text-xl font-bold text-slate-800 dark:text-white mb-2">Konfirmasi</h3>
             <div id="dialogMessage" class="text-slate-600 dark:text-slate-300 mb-6 leading-relaxed text-sm">Pesan</div>
             <div class="flex gap-3 justify-end">
                 <button id="dialogBtnCancel" onclick="closeDialog()" class="px-5 py-2.5 rounded-xl font-bold text-slate-500 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-700 transition-colors">Batal</button>
-                <button id="dialogBtnConfirm" class="px-5 py-2.5 rounded-xl font-bold bg-brand-600 text-white hover:bg-brand-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">Ya, Lanjutkan</button>
+                <button id="dialogBtnConfirm" class="px-5 py-2.5 rounded-xl font-bold bg-brand-600 text-white hover:bg-brand-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">Ya</button>
             </div>
         </div>
     </div>
 
     <script>
-        // Gaya tambahan untuk menyembunyikan scrollbar
-        const style = document.createElement('style');
-        style.innerHTML = `.no-scrollbar::-webkit-scrollbar { display: none; } .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }`;
-        document.head.appendChild(style);
-
-        // Header scroll effect
-        window.addEventListener('scroll', () => {
-            const header = document.getElementById('mainHeader');
-            if(window.scrollY > 10) header.classList.add('header-shrink');
-            else header.classList.remove('header-shrink');
-        });
-
+        // --- Core State & Variables ---
         const defaultData = { ngutangin: [], utangSaya: [], history: [] };
         let appData = defaultData;
+        
+        const defaultSettings = { pin: null, lastTab: 'ngutangin', apiKey: '', aiModel: 'gemini-1.5-flash', privacyMode: false };
+        let settings = defaultSettings;
+
         let expandedPersonId = null;
         let selectedCheckboxes = {}; 
         let currentTab = 'ngutangin';
 
-        // Format Helpers
+        // Split Bill State
+        let splitItems = []; 
+        let activeSplitItemId = null;
+        let tempSplitPeople = []; 
+
+        // PIN State
+        let pinMode = 'check'; // check, setup, confirm, remove
+        let enteredPin = '';
+        let tempPin = '';
+
+        // --- Helpers ---
         const formatRupiah = (num) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(num);
         const formatNumber = (num) => new Intl.NumberFormat('id-ID').format(num);
         const getRawNumber = (str) => parseInt(str.toString().replace(/[^0-9]/g, '')) || 0;
@@ -321,45 +515,111 @@
         }
 
         function triggerConfetti() {
-            if (typeof confetti === 'function') {
-                confetti({
-                    particleCount: 150,
-                    spread: 70,
-                    origin: { y: 0.6 },
-                    colors: ['#2563eb', '#10b981', '#f59e0b', '#ef4444', '#a855f7']
-                });
-            }
+            if (typeof confetti === 'function') confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 }, colors: ['#2563eb', '#10b981', '#f59e0b', '#ef4444', '#a855f7'] });
         }
 
-        // Data Management & Migration
+        // Generate Avatar Color based on Name
+        function getAvatarColor(name) {
+            const colors = [
+                'from-blue-400 to-blue-600 text-white', 'from-emerald-400 to-emerald-600 text-white',
+                'from-red-400 to-red-600 text-white', 'from-purple-400 to-purple-600 text-white',
+                'from-orange-400 to-orange-600 text-white', 'from-teal-400 to-teal-600 text-white',
+                'from-pink-400 to-pink-600 text-white', 'from-indigo-400 to-indigo-600 text-white'
+            ];
+            let hash = 0;
+            for (let i = 0; i < name.length; i++) hash = name.charCodeAt(i) + ((hash << 5) - hash);
+            return colors[Math.abs(hash) % colors.length];
+        }
+
+        // --- Data Layer ---
         function loadData() {
             try {
-                const stored = localStorage.getItem('ngutangData');
+                const stored = localStorage.getItem('ngutangDataV2');
                 if (stored) {
                     appData = JSON.parse(stored);
-                    if (appData.active) { appData.ngutangin = appData.active; delete appData.active; }
-                    if (!appData.ngutangin) appData.ngutangin = [];
-                    if (!appData.utangSaya) appData.utangSaya = [];
-                    
-                    ['ngutangin', 'utangSaya'].forEach(listName => {
-                        appData[listName].forEach(p => {
-                            if(!p.notes) p.notes = '';
-                            p.items.forEach(i => { 
-                                if(!i.paymentHistory) i.paymentHistory = []; 
-                                if(!i.dueDate) i.dueDate = '';
-                            });
-                        });
-                    });
+                } else {
+                    // Migrasi dari versi lama jika ada
+                    const oldStored = localStorage.getItem('ngutangData');
+                    if (oldStored) {
+                        const oldApp = JSON.parse(oldStored);
+                        appData.ngutangin = oldApp.ngutangin || oldApp.active || [];
+                        appData.utangSaya = oldApp.utangSaya || [];
+                        appData.history = oldApp.history || [];
+                    }
                 }
+                
+                const storedSettings = localStorage.getItem('ngutangSettings');
+                if (storedSettings) settings = {...defaultSettings, ...JSON.parse(storedSettings)};
+                
             } catch (e) { appData = defaultData; }
         }
 
         function saveData() {
-            localStorage.setItem('ngutangData', JSON.stringify(appData));
-            if (currentTab === 'history') renderHistory(); else renderUI();
+            localStorage.setItem('ngutangDataV2', JSON.stringify(appData));
+            if (currentTab === 'history') renderHistory(); else if (currentTab !== 'tool') renderUI();
         }
 
-        // Dialog System
+        function saveSettings() {
+            localStorage.setItem('ngutangSettings', JSON.stringify(settings));
+        }
+
+        // --- UI Interactions ---
+        window.addEventListener('scroll', () => {
+            const header = document.getElementById('mainHeader');
+            if(window.scrollY > 10) header.classList.add('header-shrink');
+            else header.classList.remove('header-shrink');
+        });
+
+        function switchTab(tab) {
+            currentTab = tab;
+            settings.lastTab = tab;
+            saveSettings();
+            
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            document.querySelectorAll('button[id^="tabBtn-"]').forEach(btn => {
+                btn.className = "px-4 py-2 text-[11px] sm:text-sm font-bold rounded-lg transition-all text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200";
+            });
+
+            const activeBtnClass = "px-4 py-2 text-[11px] sm:text-sm font-bold rounded-lg transition-all bg-white dark:bg-slate-700 shadow-sm text-brand-700 dark:text-blue-300";
+            const btn = document.getElementById(`tabBtn-${tab}`);
+            if(btn) btn.className = tab === 'tool' ? activeBtnClass + " flex items-center gap-1" : activeBtnClass;
+
+            const fab = document.getElementById('mainFabBtn');
+            const searchSort = document.getElementById('searchSortArea');
+
+            if (tab === 'ngutangin' || tab === 'utangSaya') {
+                document.getElementById('tab-main').classList.add('active');
+                fab.classList.remove('hidden');
+                searchSort.classList.remove('hidden');
+                document.getElementById('headerTitle').innerText = tab === 'ngutangin' ? 'TOTAL NGUTANGIN' : 'TOTAL UTANG SAYA';
+                renderUI();
+            } else if (tab === 'history') {
+                document.getElementById('tab-history').classList.add('active');
+                fab.classList.add('hidden');
+                searchSort.classList.add('hidden');
+                document.getElementById('headerTitle').innerText = 'TOTAL TRANSAKSI';
+                renderHistory();
+            } else if (tab === 'tool') {
+                document.getElementById('tab-tool').classList.add('active');
+                fab.classList.add('hidden');
+                searchSort.classList.add('hidden');
+                document.getElementById('headerTitle').innerText = 'ALAT BANTU';
+                document.getElementById('totalGlobalDebt').innerText = '-';
+            }
+        }
+
+        function toggleAccordion(personId) { expandedPersonId = expandedPersonId === personId ? null : personId; renderUI(); }
+        function openSheet(sheetId) { 
+            const sheet = document.getElementById(sheetId);
+            sheet.classList.remove('hidden-sheet');
+            if (sheetId === 'addPersonSheet') {
+                document.getElementById('addPersonSubtitle').innerText = `Masuk ke daftar: ${currentTab === 'ngutangin' ? 'Ngutangin' : 'Utang Saya'}`;
+                setTimeout(() => document.getElementById('newPersonName').focus(), 300);
+            }
+        }
+        function closeSheet(sheetId) { document.getElementById(sheetId).classList.add('hidden-sheet'); }
+
+        // --- Custom Dialog System ---
         let dialogConfirmCallback = null;
         function showConfirm(title, message, callback, btnText = "Ya", btnColor = "bg-brand-600", requireInput = false) {
             document.getElementById('dialogTitle').innerText = title;
@@ -369,32 +629,22 @@
                     <div class="mt-4">
                         <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-2">Ketik "HAPUS" untuk konfirmasi:</label>
                         <input type="text" id="confirmInput" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-2.5 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-red-500 transition-colors" oninput="validateConfirmInput(this.value)" autocomplete="off">
-                    </div>
-                `;
+                    </div>`;
             }
             document.getElementById('dialogMessage').innerHTML = messageHtml;
             const btnConfirm = document.getElementById('dialogBtnConfirm');
             btnConfirm.innerText = btnText;
             btnConfirm.className = `px-5 py-2.5 rounded-xl font-bold text-white transition-colors ${btnColor}`;
-            
-            if (requireInput) {
-                btnConfirm.disabled = true;
-                btnConfirm.classList.add('opacity-50', 'cursor-not-allowed');
-            } else {
-                btnConfirm.disabled = false;
-                btnConfirm.classList.remove('opacity-50', 'cursor-not-allowed');
-            }
+            btnConfirm.disabled = requireInput;
+            if(requireInput) btnConfirm.classList.add('opacity-50', 'cursor-not-allowed');
+            else btnConfirm.classList.remove('opacity-50', 'cursor-not-allowed');
 
             document.getElementById('dialogBtnCancel').classList.remove('hidden');
             dialogConfirmCallback = callback;
             const overlay = document.getElementById('customDialogOverlay');
             const box = document.getElementById('customDialogBox');
             overlay.classList.remove('hidden');
-            setTimeout(() => {
-                overlay.classList.add('opacity-100');
-                box.classList.remove('scale-95');
-                box.classList.add('scale-100');
-            }, 10);
+            setTimeout(() => { overlay.classList.add('opacity-100'); box.classList.remove('scale-95'); box.classList.add('scale-100'); }, 10);
             if (requireInput) setTimeout(() => document.getElementById('confirmInput')?.focus(), 300);
         }
 
@@ -411,12 +661,13 @@
 
         function showAlert(title, message, isWarning = false) {
             document.getElementById('dialogTitle').innerText = title;
-            document.getElementById('dialogMessage').innerText = message;
+            document.getElementById('dialogMessage').innerHTML = message;
             const btnConfirm = document.getElementById('dialogBtnConfirm');
             btnConfirm.innerText = "Tutup";
             btnConfirm.className = `px-5 py-2.5 rounded-xl font-bold text-white transition-colors ${isWarning ? 'bg-orange-500 hover:bg-orange-600' : 'bg-brand-600 hover:bg-brand-700'}`;
             document.getElementById('dialogBtnCancel').classList.add('hidden');
             dialogConfirmCallback = null;
+            btnConfirm.disabled = false; btnConfirm.classList.remove('opacity-50', 'cursor-not-allowed');
             const overlay = document.getElementById('customDialogOverlay');
             const box = document.getElementById('customDialogBox');
             overlay.classList.remove('hidden');
@@ -432,71 +683,12 @@
             const overlay = document.getElementById('customDialogOverlay');
             const box = document.getElementById('customDialogBox');
             overlay.classList.remove('opacity-100');
-            box.classList.remove('scale-100');
-            box.classList.add('scale-95');
+            box.classList.remove('scale-100'); box.classList.add('scale-95');
             setTimeout(() => overlay.classList.add('hidden'), 200);
         }
 
-        function switchTab(tab) {
-            currentTab = tab;
-            document.getElementById('tab-main').classList.remove('active');
-            document.getElementById('tab-history').classList.remove('active');
-            
-            const btnNgutangin = document.getElementById('tabBtn-ngutangin');
-            const btnUtangSaya = document.getElementById('tabBtn-utangSaya');
-            const btnHistory = document.getElementById('tabBtn-history');
-            
-            const activeStyle = "flex-1 py-2 text-[11px] sm:text-sm font-bold rounded-lg bg-white dark:bg-slate-700 shadow-sm text-brand-700 dark:text-blue-300 transition-all";
-            const inactiveStyle = "flex-1 py-2 text-[11px] sm:text-sm font-medium rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition-all";
-
-            btnNgutangin.className = tab === 'ngutangin' ? activeStyle : inactiveStyle;
-            btnUtangSaya.className = tab === 'utangSaya' ? activeStyle : inactiveStyle;
-            btnHistory.className = tab === 'history' ? activeStyle : inactiveStyle;
-
-            const fab = document.getElementById('mainFabBtn');
-            const searchSort = document.getElementById('searchSortArea');
-
-            if(tab === 'ngutangin' || tab === 'utangSaya') {
-                document.getElementById('tab-main').classList.add('active');
-                fab.classList.remove('hidden');
-                searchSort.classList.remove('hidden');
-                document.getElementById('headerTitle').innerText = tab === 'ngutangin' ? 'TOTAL NGUTANGIN' : 'TOTAL UTANG SAYA';
-                renderUI();
-            } else {
-                document.getElementById('tab-history').classList.add('active');
-                fab.classList.add('hidden');
-                searchSort.classList.add('hidden');
-                document.getElementById('headerTitle').innerText = 'TOTAL TRANSAKSI LUNAS';
-                document.getElementById('totalGlobalDebt').innerText = '-';
-                renderHistory();
-            }
-        }
-
-        function toggleAccordion(personId) {
-            expandedPersonId = expandedPersonId === personId ? null : personId;
-            renderUI();
-        }
-
-        function openSheet(sheetId) {
-            const sheet = document.getElementById(sheetId);
-            sheet.classList.remove('hidden-sheet');
-            
-            if (sheetId === 'addPersonSheet') {
-                const subtitle = document.getElementById('addPersonSubtitle');
-                subtitle.innerText = `Masuk ke daftar: ${currentTab === 'ngutangin' ? 'Ngutangin' : 'Utang Saya'}`;
-                setTimeout(() => document.getElementById('newPersonName').focus(), 300);
-            }
-            if (sheetId === 'addItemSheet') {
-                document.getElementById('newItemDate').value = getTodayDate();
-                document.getElementById('newItemDueDate').value = '';
-                setTimeout(() => document.getElementById('newItemName').focus(), 300);
-            }
-        }
-
-        function closeSheet(sheetId) { document.getElementById(sheetId).classList.add('hidden-sheet'); }
-
+        // --- List Management ---
         function getCurrentList() { return currentTab === 'utangSaya' ? appData.utangSaya : appData.ngutangin; }
-
         function findPersonById(personId) {
             let person = appData.ngutangin.find(p => p.id === personId);
             if (person) return { person, sourceList: 'ngutangin' };
@@ -507,79 +699,93 @@
 
         function addPerson(e) {
             e.preventDefault();
-            const nameInput = document.getElementById('newPersonName');
-            const phoneInput = document.getElementById('newPersonPhone');
-            const notesInput = document.getElementById('newPersonNotes');
-            
-            const name = nameInput.value.trim();
-            let phone = phoneInput.value.replace(/\D/g, '');
-            const notes = notesInput.value.trim();
+            const name = document.getElementById('newPersonName').value.trim();
+            let phone = document.getElementById('newPersonPhone').value.replace(/\D/g, '');
+            const notes = document.getElementById('newPersonNotes').value.trim();
             
             if (!name) return;
             if (phone.startsWith('0')) phone = '62' + phone.substring(1); 
 
-            const targetList = getCurrentList();
-            targetList.unshift({
-                id: 'p_' + Date.now().toString(),
-                name: name,
-                phone: phone,
-                notes: notes,
-                items: []
-            });
-
-            nameInput.value = ''; phoneInput.value = ''; notesInput.value = '';
-            closeSheet('addPersonSheet');
-            saveData();
+            getCurrentList().unshift({ id: 'p_' + Date.now().toString(), name, phone, notes, items: [] });
+            document.getElementById('newPersonName').value = ''; document.getElementById('newPersonPhone').value = ''; document.getElementById('newPersonNotes').value = '';
+            closeSheet('addPersonSheet'); saveData();
         }
 
         function triggerDeletePerson(personId) {
-            showConfirm("Hapus Kontak?", "Kontak ini dan semua catatan hutangnya yang belum lunas akan dihapus permanen.", () => {
+            showConfirm("Hapus Kontak?", "Kontak ini dan semua catatan hutangnya akan dihapus permanen.", () => {
                 appData.ngutangin = appData.ngutangin.filter(p => p.id !== personId);
                 appData.utangSaya = appData.utangSaya.filter(p => p.id !== personId);
-                delete selectedCheckboxes[personId];
-                saveData();
+                delete selectedCheckboxes[personId]; saveData();
             }, "Hapus", "bg-red-500 hover:bg-red-600");
         }
 
-        function triggerAddItem(personId, personName, event) {
+        // --- Bulk Add Item ---
+        function triggerAddBulkItem(personId, personName, event) {
             event.stopPropagation();
             document.getElementById('addItemPersonId').value = personId;
             document.getElementById('addItemPersonName').innerText = `Untuk: ${personName}`;
-            document.getElementById('newItemName').value = '';
-            document.getElementById('newItemPrice').value = '';
+            document.getElementById('globalItemDate').value = getTodayDate();
+            document.getElementById('globalItemDueDate').value = '';
+            
+            document.getElementById('bulkItemsContainer').innerHTML = '';
+            addBulkItemRow(); 
             openSheet('addItemSheet');
         }
 
-        function addItem(e) {
-            e.preventDefault();
+        function addBulkItemRow() {
+            const container = document.getElementById('bulkItemsContainer');
+            const id = Date.now() + Math.floor(Math.random() * 1000);
+            const row = document.createElement('div');
+            row.className = 'flex gap-2 items-center';
+            row.id = `bulkRow_${id}`;
+            row.innerHTML = `
+                <input type="text" placeholder="Nama Pesanan" class="flex-1 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-3 text-sm focus:ring-2 focus:ring-brand-500 text-slate-800 dark:text-slate-100 bulk-name" required autocomplete="off"/>
+                <input type="text" inputmode="numeric" oninput="formatPriceInput(this)" placeholder="Nominal" class="w-1/3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-3 text-sm focus:ring-2 focus:ring-brand-500 text-slate-800 dark:text-slate-100 bulk-price" required autocomplete="off"/>
+                <button type="button" onclick="document.getElementById('bulkRow_${id}').remove()" class="p-2 text-slate-400 hover:text-red-500 transition-colors"><i class="ph-bold ph-trash text-lg"></i></button>
+            `;
+            container.appendChild(row);
+            row.querySelector('.bulk-name').focus();
+        }
+
+        function saveBulkItems() {
             const personId = document.getElementById('addItemPersonId').value;
-            const dateInput = document.getElementById('newItemDate').value;
-            const nameInput = document.getElementById('newItemName').value.trim();
-            const rawPrice = getRawNumber(document.getElementById('newItemPrice').value);
-            const dueDateInput = document.getElementById('newItemDueDate').value;
+            const dateInput = document.getElementById('globalItemDate').value;
+            const dueDateInput = document.getElementById('globalItemDueDate').value;
+            const rows = document.querySelectorAll('#bulkItemsContainer > div');
             
-            if (!nameInput || !rawPrice || !dateInput) return;
+            if (!dateInput || rows.length === 0) return;
+            const { person } = findPersonById(personId);
+            if (!person) return;
 
             const d = new Date(dateInput);
             const formattedDate = `${d.getDate()}/${d.getMonth() + 1}`; 
+            
+            let addedCount = 0;
+            rows.forEach(row => {
+                const name = row.querySelector('.bulk-name').value.trim();
+                const priceStr = row.querySelector('.bulk-price').value;
+                const price = getRawNumber(priceStr);
+                
+                if (name && price > 0) {
+                    person.items.unshift({
+                        id: 'i_' + Date.now().toString() + Math.random().toString().substr(2,4),
+                        date: formattedDate,
+                        rawDate: dateInput,
+                        dueDate: dueDateInput,
+                        name: name,
+                        originalPrice: price,
+                        paidAmount: 0,
+                        remainingPrice: price,
+                        paymentHistory: []
+                    });
+                    addedCount++;
+                }
+            });
 
-            const { person } = findPersonById(personId);
-            if (person) {
-                person.items.unshift({
-                    id: 'i_' + Date.now().toString(),
-                    date: formattedDate,
-                    rawDate: dateInput,
-                    dueDate: dueDateInput,
-                    name: nameInput,
-                    originalPrice: rawPrice,
-                    paidAmount: 0,
-                    remainingPrice: rawPrice,
-                    paymentHistory: []
-                });
+            if(addedCount > 0) {
+                closeSheet('addItemSheet');
+                if (expandedPersonId !== personId) toggleAccordion(personId); else saveData();
             }
-
-            closeSheet('addItemSheet');
-            if (expandedPersonId !== personId) toggleAccordion(personId); else saveData(); 
         }
 
         function triggerDeleteItem(personId, itemId, event) {
@@ -594,56 +800,33 @@
             }, "Hapus", "bg-red-500 hover:bg-red-600");
         }
 
+        // --- Payments ---
         function triggerPayment(personId, itemId, event) {
             event.stopPropagation();
             const { person } = findPersonById(personId);
             const item = person.items.find(i => i.id === itemId);
-            
-            document.getElementById('payPersonId').value = personId;
-            document.getElementById('payItemId').value = itemId;
-            document.getElementById('payMaxAmount').value = item.remainingPrice;
-            document.getElementById('payAmountInput').value = '';
-            document.getElementById('paymentFeedback').innerHTML = '';
-            
+            document.getElementById('payPersonId').value = personId; document.getElementById('payItemId').value = itemId; document.getElementById('payMaxAmount').value = item.remainingPrice;
+            document.getElementById('payAmountInput').value = ''; document.getElementById('paymentFeedback').innerHTML = '';
             document.getElementById('payItemTitle').innerText = `${item.name} (Sisa: ${formatRupiah(item.remainingPrice)})`;
             document.getElementById('btnSetFull').innerText = `Lunas (${formatNumber(item.remainingPrice)})`;
-            
-            openSheet('paymentSheet');
-            setTimeout(() => document.getElementById('payAmountInput').focus(), 300);
+            openSheet('paymentSheet'); setTimeout(() => document.getElementById('payAmountInput').focus(), 300);
         }
 
-        function setQuickPayment(amount) {
-            const input = document.getElementById('payAmountInput');
-            input.value = formatNumber(amount);
-            calculatePaymentFeedback();
-        }
-
-        function setHalfPayment() {
-            const max = document.getElementById('payMaxAmount').value;
-            setQuickPayment(Math.ceil(max / 2));
-        }
-
-        function setFullPayment() {
-            const max = document.getElementById('payMaxAmount').value;
-            setQuickPayment(max);
-        }
+        function setQuickPayment(amount) { const input = document.getElementById('payAmountInput'); input.value = formatNumber(amount); calculatePaymentFeedback(); }
+        function setHalfPayment() { const max = document.getElementById('payMaxAmount').value; setQuickPayment(Math.ceil(max / 2)); }
+        function setFullPayment() { const max = document.getElementById('payMaxAmount').value; setQuickPayment(max); }
 
         function calculatePaymentFeedback() {
             const input = document.getElementById('payAmountInput');
             const max = parseInt(document.getElementById('payMaxAmount').value) || 0;
             const payAmount = getRawNumber(input.value);
             const feedbackEl = document.getElementById('paymentFeedback');
-            
             if (!payAmount) { feedbackEl.innerHTML = ''; return; }
             
             const diff = payAmount - max;
-            if (diff > 0) {
-                feedbackEl.innerHTML = `<span class="text-orange-500 dark:text-orange-400 font-bold tracking-tight">⚠️ Kembalian: ${formatRupiah(diff)}</span>`;
-            } else if (diff < 0) {
-                feedbackEl.innerHTML = `<span class="text-brand-600 dark:text-brand-400 font-medium">Sisa utang nanti: ${formatRupiah(Math.abs(diff))}</span>`;
-            } else {
-                feedbackEl.innerHTML = `<span class="text-emerald-600 dark:text-emerald-400 font-bold">Lunas Pas!</span>`;
-            }
+            if (diff > 0) feedbackEl.innerHTML = `<span class="text-orange-500 dark:text-orange-400 font-bold tracking-tight">⚠️ Kembalian: ${formatRupiah(diff)}</span>`;
+            else if (diff < 0) feedbackEl.innerHTML = `<span class="text-brand-600 dark:text-brand-400 font-medium">Sisa utang nanti: ${formatRupiah(Math.abs(diff))}</span>`;
+            else feedbackEl.innerHTML = `<span class="text-emerald-600 dark:text-emerald-400 font-bold">Lunas Pas!</span>`;
         }
 
         function processPayment(e) {
@@ -653,13 +836,11 @@
             const payAmount = getRawNumber(document.getElementById('payAmountInput').value);
             
             const { person, sourceList } = findPersonById(personId);
-            if (!person) return;
+            if (!person || payAmount <= 0) return;
             const itemIndex = person.items.findIndex(i => i.id === itemId);
             if (itemIndex === -1) return;
             const item = person.items[itemIndex];
 
-            if (payAmount <= 0) return;
-            
             const actualPaymentToDebt = Math.min(payAmount, item.remainingPrice);
             const changeAmount = payAmount > item.remainingPrice ? payAmount - item.remainingPrice : 0;
             
@@ -678,14 +859,9 @@
                 if (selectedCheckboxes[personId]) selectedCheckboxes[personId] = selectedCheckboxes[personId].filter(id => id !== itemId);
             }
 
-            closeSheet('paymentSheet');
-            saveData();
-            
+            closeSheet('paymentSheet'); saveData();
             if (wasFullyPaid) triggerConfetti();
-            
-            if (changeAmount > 0) {
-                showAlert("Transaksi Selesai", `Telah lunas.\n\nJangan lupa ada kembalian sebesar:\n${formatRupiah(changeAmount)}`, true);
-            }
+            if (changeAmount > 0) showAlert("Transaksi Selesai", `Tagihan lunas.\n\nJangan lupa ada kembalian sebesar:\n${formatRupiah(changeAmount)}`, true);
         }
 
         function toggleCheckbox(personId, itemId) {
@@ -701,210 +877,134 @@
             const { person, sourceList } = findPersonById(personId);
             const selectedIds = selectedCheckboxes[personId] || [];
             if (selectedIds.length === 0) return;
+            
+            const totalToPay = selectedIds.reduce((sum, id) => sum + person.items.find(i=>i.id===id).remainingPrice, 0);
 
-            showConfirm("Lunas Terpilih?", `Tandai ${selectedIds.length} item terpilih lunas penuh?`, () => {
-                let totalPaidThisTransaction = 0;
+            showConfirm("Lunas Terpilih?", `Lunasi item terpilih sejumlah ${formatRupiah(totalToPay)}?`, () => {
                 let paidItemsInfo = [];
-
                 selectedIds.forEach(itemId => {
                     const itemIndex = person.items.findIndex(i => i.id === itemId);
                     if (itemIndex > -1) {
                         const item = person.items[itemIndex];
-                        totalPaidThisTransaction += item.remainingPrice;
                         paidItemsInfo.push({ name: item.name, paidAmount: item.remainingPrice });
                         item.paidAmount += item.remainingPrice;
                         item.remainingPrice = 0;
                     }
                 });
 
-                recordHistoryEvent(person, paidItemsInfo, totalPaidThisTransaction, true, 0, sourceList);
+                recordHistoryEvent(person, paidItemsInfo, totalToPay, true, 0, sourceList);
                 person.items = person.items.filter(i => !selectedIds.includes(i.id));
                 selectedCheckboxes[personId] = [];
-                
-                triggerConfetti();
-                saveData();
+                triggerConfetti(); saveData();
             }, "Lunaskan", "bg-emerald-500 hover:bg-emerald-600");
         }
 
         function recordHistoryEvent(person, itemsInfo, totalAmount, isFull = false, changeAmount = 0, sourceList = 'ngutangin') {
             const today = new Date();
             appData.history.unshift({
-                id: 'h_' + Date.now().toString(),
-                personId: person.id,
-                personName: person.name,
-                date: today.toLocaleDateString('id-ID'),
-                time: getCurrentTimeStr(),
-                type: isFull ? 'full' : 'partial',
-                items: itemsInfo,
-                totalAmount: totalAmount,
-                changeAmount: changeAmount,
-                sourceList: sourceList 
+                id: 'h_' + Date.now().toString(), personId: person.id, personName: person.name,
+                date: today.toLocaleDateString('id-ID'), time: getCurrentTimeStr(),
+                type: isFull ? 'full' : 'partial', items: itemsInfo, totalAmount, changeAmount, sourceList
             });
-        }
-
-        function shareWhatsApp(personId, event) {
-            event.stopPropagation();
-            const { person, sourceList } = findPersonById(personId);
-            if (!person || person.items.length === 0) return;
-
-            let totalSisa = 0;
-            let message = '';
-            
-            person.items.forEach((item) => {
-                totalSisa += item.remainingPrice;
-                let cicilanSisa = '';
-                if (item.paymentHistory && item.paymentHistory.length > 0) {
-                    const historyStr = item.paymentHistory.map(n => formatNumber(n)).join(', ');
-                    cicilanSisa = `(Telah dicicil: ${historyStr})\nSisa = Rp ${formatNumber(item.remainingPrice)}`;
-                }
-                message += `${item.date} ${item.name} = Rp ${formatNumber(item.originalPrice)}${cicilanSisa}\n`;
-            });
-            message += `\n= Total: Rp ${formatNumber(totalSisa)}`;
-
-            const encodedMessage = encodeURIComponent(message);
-            const whatsappUrl = person.phone 
-                ? `https://wa.me/${person.phone}?text=${encodedMessage}`
-                : `https://wa.me/?text=${encodedMessage}`;
-            window.open(whatsappUrl, '_blank');
         }
 
         function copyNotes(personId, event) {
             if (event) event.stopPropagation();
             const { person } = findPersonById(personId);
             if (!person || !person.notes) return;
-            
-            const textArea = document.createElement("textarea");
-            textArea.value = person.notes;
-            textArea.style.position = "fixed";
-            document.body.appendChild(textArea);
-            textArea.focus();
-            textArea.select();
-            
-            try {
-                document.execCommand('copy');
-                showAlert("Tersalin", "Catatan disalin ke clipboard!");
-            } catch (err) {
-                showAlert("Gagal", "Tidak dapat menyalin catatan.");
-            }
+            const textArea = document.createElement("textarea"); textArea.value = person.notes; textArea.style.position = "fixed"; document.body.appendChild(textArea); textArea.focus(); textArea.select();
+            try { document.execCommand('copy'); showAlert("Tersalin", "Catatan berhasil disalin ke clipboard!"); } catch (err) {}
             document.body.removeChild(textArea);
         }
 
-        function calculatePersonDebt(person) {
-            return person.items.reduce((total, i) => total + i.remainingPrice, 0);
+        function shareWhatsApp(personId, event) {
+            event.stopPropagation();
+            const { person } = findPersonById(personId);
+            if (!person || person.items.length === 0) return;
+
+            let totalSisa = 0; let message = '';
+            person.items.forEach((item) => {
+                totalSisa += item.remainingPrice;
+                const historyText = (item.paymentHistory && item.paymentHistory.length > 0) ? `(Telah dicicil: ${item.paymentHistory.map(n => formatNumber(n)).join(', ')})` : '';
+                message += `${item.date} ${item.name} = Rp ${formatNumber(item.originalPrice)}${historyText}\n`;
+            });
+            message += `\n= Total: Rp ${formatNumber(totalSisa)}`;
+
+            const encodedMessage = encodeURIComponent(message);
+            const whatsappUrl = person.phone ? `https://wa.me/${person.phone}?text=${encodedMessage}` : `https://wa.me/?text=${encodedMessage}`;
+            window.open(whatsappUrl, '_blank');
         }
+
+        // --- Render UI ---
+        function calculatePersonDebt(person) { return person.items.reduce((total, i) => total + i.remainingPrice, 0); }
 
         function renderUI() {
             let globalDebt = 0;
             const container = document.getElementById('mainList');
             container.innerHTML = '';
+            
+            if (document.getElementById('totalGlobalDebt')) {
+                document.getElementById('totalGlobalDebt').innerText = settings.privacyMode ? "Rp •••••" : formatRupiah(globalDebt);
+            }
 
             let listToRender = [...getCurrentList()];
-            
-            // Filtering
             const query = document.getElementById('searchInput').value.toLowerCase().trim();
             if(query) listToRender = listToRender.filter(p => p.name.toLowerCase().includes(query));
 
-            // Sorting
             const sortVal = document.getElementById('sortSelect').value;
-            if(sortVal === 'az') {
-                listToRender.sort((a,b) => a.name.localeCompare(b.name));
-            } else if (sortVal === 'largest') {
-                listToRender.sort((a,b) => calculatePersonDebt(b) - calculatePersonDebt(a));
-            } else {
-                // Newest (default, array is unshifted)
-            }
+            if(sortVal === 'az') listToRender.sort((a,b) => a.name.localeCompare(b.name));
+            else if (sortVal === 'largest') listToRender.sort((a,b) => calculatePersonDebt(b) - calculatePersonDebt(a));
 
             const todayStr = getTodayDate();
 
             if (listToRender.length === 0) {
-                container.innerHTML = `
-                    <div class="flex flex-col items-center justify-center p-10 bg-white dark:bg-slate-800 rounded-2xl border border-dashed border-slate-300 dark:border-slate-700 text-slate-400">
-                        <i class="ph-fill ph-users text-5xl mb-3 text-slate-300 dark:text-slate-600"></i>
-                        <p class="font-medium text-slate-500 dark:text-slate-400 text-center text-sm">Tidak ada catatan ditemukan.<br>Mulai dengan klik + di bawah.</p>
-                    </div>`;
+                container.innerHTML = `<div class="flex flex-col items-center justify-center p-10 bg-white dark:bg-slate-800 rounded-2xl border border-dashed border-slate-300 dark:border-slate-700 text-slate-400"><i class="ph-fill ph-users text-5xl mb-3 text-slate-300 dark:text-slate-600"></i><p class="font-medium text-slate-500 dark:text-slate-400 text-center text-sm">Tidak ada catatan ditemukan.<br>Mulai dengan klik + di bawah.</p></div>`;
             } else {
                 listToRender.forEach(person => {
-                    let personTotalDebt = 0;
-                    let personTotalPaid = 0;
-                    let personTotalOriginal = 0;
-                    let activeInstallments = []; 
-                    
+                    let personTotalDebt = 0; let personTotalPaid = 0; let personTotalOriginal = 0; let activeInstallments = []; 
                     person.items.forEach(i => {
-                        personTotalDebt += i.remainingPrice;
-                        personTotalPaid += i.paidAmount;
-                        personTotalOriginal += i.originalPrice;
-                        
+                        personTotalDebt += i.remainingPrice; personTotalPaid += i.paidAmount; personTotalOriginal += i.originalPrice;
                         if ((i.paymentHistory && i.paymentHistory.length > 0) && i.remainingPrice > 0) activeInstallments.push(i.name);
                     });
-                    
                     globalDebt += personTotalDebt;
+                    
                     const isExpanded = expandedPersonId === person.id;
                     const selectedIds = selectedCheckboxes[person.id] || [];
+                    const selectedTotal = selectedIds.reduce((sum, id) => sum + person.items.find(i=>i.id===id).remainingPrice, 0);
                     let progressPercent = personTotalOriginal > 0 ? (personTotalPaid / personTotalOriginal) * 100 : 0;
+                    const bgAvatar = getAvatarColor(person.name);
 
-                    let installmentIndicatorHtml = '';
-                    if (activeInstallments.length > 0 && !isExpanded) {
-                        installmentIndicatorHtml = `
-                            <div class="text-[11px] text-brand-600 dark:text-brand-400 mt-1 flex items-center gap-1 font-medium truncate max-w-[200px]">
-                                <i class="ph-bold ph-arrows-clockwise"></i> Dicicil: ${activeInstallments.join(', ')}
-                            </div>
-                        `;
-                    }
+                    let installmentHtml = activeInstallments.length > 0 && !isExpanded ? `<div class="text-[11px] text-brand-600 dark:text-brand-400 mt-1 flex items-center gap-1 font-medium truncate max-w-[200px]"><i class="ph-bold ph-arrows-clockwise"></i> Dicicil: ${activeInstallments.join(', ')}</div>` : '';
 
-                    // Render Daftar Bon Layout Compact Referensi Gambar
-                    let itemsHtml = person.items.length === 0 
-                        ? `<div class="text-center py-5 bg-slate-50/50 dark:bg-slate-900/30 rounded-xl border border-dashed border-slate-300 dark:border-slate-700 text-slate-400 text-sm italic">Belum ada catatan bon</div>`
-                        : `<div class="space-y-3 mb-4">` + person.items.map(item => {
-                            const isChecked = selectedIds.includes(item.id);
-                            const hasHistory = item.paymentHistory && item.paymentHistory.length > 0;
-                            const historyText = hasHistory ? item.paymentHistory.map(n => formatNumber(n)).join(', ') : '';
-                            
-                            const isLate = item.dueDate && item.dueDate < todayStr;
-                            const lateBadge = isLate ? `<span class="ml-2 text-[10px] font-bold text-red-600 dark:text-red-400 bg-red-100 dark:bg-red-900/30 px-1.5 py-0.5 rounded">⚠️ Telat</span>` : '';
-
-                            return `
-                            <div class="flex items-center gap-3 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 p-4 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm relative overflow-hidden transition-all cursor-pointer" onclick="toggleCheckbox('${person.id}', '${item.id}')">
-                                <div class="flex-shrink-0">
-                                    <input type="checkbox" class="custom-checkbox border-2 border-slate-300 dark:border-slate-600" ${isChecked ? 'checked' : ''} onclick="event.stopPropagation(); toggleCheckbox('${person.id}', '${item.id}')">
+                    let itemsHtml = person.items.length === 0 ? `<div class="text-center py-5 bg-slate-50/50 dark:bg-slate-900/30 rounded-xl border border-dashed border-slate-300 dark:border-slate-700 text-slate-400 text-sm italic">Belum ada catatan bon</div>` : `<div class="space-y-3 mb-4">` + person.items.map(item => {
+                        const isChecked = selectedIds.includes(item.id);
+                        const hasHistory = item.paymentHistory && item.paymentHistory.length > 0;
+                        const historyText = hasHistory ? item.paymentHistory.map(n => formatNumber(n)).join(', ') : '';
+                        const isLate = item.dueDate && item.dueDate < todayStr;
+                        
+                        return `
+                        <div class="flex bg-white dark:bg-slate-800 p-3 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm relative transition-all cursor-pointer hover:border-brand-300 dark:hover:border-brand-700" onclick="toggleCheckbox('${person.id}', '${item.id}')">
+                            <div class="flex-shrink-0 pt-1 pr-3"><input type="checkbox" class="custom-checkbox" ${isChecked ? 'checked' : ''} onclick="event.stopPropagation(); toggleCheckbox('${person.id}', '${item.id}')"></div>
+                            <div class="flex-1 min-w-0">
+                                <div class="flex justify-between items-start mb-1">
+                                    <h4 class="font-bold text-sm sm:text-base text-slate-800 dark:text-slate-200 truncate pr-2">${item.name} ${isLate ? '<span class="ml-1 text-[9px] uppercase font-bold text-red-600 bg-red-100 dark:bg-red-900/40 px-1 py-0.5 rounded">Telat</span>' : ''}</h4>
+                                    <span class="text-[11px] font-bold text-brand-600 dark:text-brand-400 shrink-0">${item.date}</span>
                                 </div>
-                                <div class="flex-1 min-w-0 flex flex-col justify-between h-full">
-                                    <div class="flex items-start justify-between w-full mb-1">
-                                        <h4 class="font-bold text-base truncate capitalize leading-tight flex items-center">${item.name} ${lateBadge}</h4>
-                                        <span class="text-xs font-bold text-brand-600 dark:text-brand-400 shrink-0 ml-2">${item.date}</span>
+                                <div class="flex justify-between items-end">
+                                    <div class="flex flex-col">
+                                        ${hasHistory ? `<span class="text-[10px] text-slate-400 line-through mb-0.5 money-value">Rp ${formatNumber(item.originalPrice)}</span><span class="text-[9px] text-slate-500 italic mb-0.5 money-value">Riwayat cicil: ${historyText}</span>` : ''}
+                                        <span class="font-black text-slate-800 dark:text-slate-100 text-[15px] sm:text-lg money-value tracking-tight">Rp ${formatNumber(item.remainingPrice)}</span>
                                     </div>
-                                    <div class="flex items-end justify-between w-full mt-1">
-                                        <div class="flex flex-col">
-                                            ${hasHistory ? `
-                                                <span class="text-[11px] text-slate-400 line-through decoration-slate-500 mb-0.5">${formatNumber(item.originalPrice)}</span>
-                                                <span class="text-[10px] text-slate-500 dark:text-slate-400 font-light italic mb-0.5 truncate max-w-[150px]">Riwayat cicil: ${historyText}</span>
-                                            ` : ''}
-                                            <span class="font-black text-lg tracking-tight">${formatRupiah(item.remainingPrice)}</span>
-                                        </div>
-                                        <div class="flex gap-2" onclick="event.stopPropagation()">
-                                            <button onclick="triggerPayment('${person.id}', '${item.id}', event)" class="bg-slate-100 hover:bg-slate-200 text-brand-600 dark:bg-slate-700 dark:hover:bg-slate-600 dark:text-brand-400 h-9 w-9 rounded-lg transition-colors flex items-center justify-center">
-                                                <i class="ph-bold ph-wallet text-lg"></i>
-                                            </button>
-                                            <button onclick="triggerDeleteItem('${person.id}', '${item.id}', event)" class="bg-slate-100 hover:bg-slate-200 text-red-500 dark:bg-slate-700 dark:hover:bg-slate-600 dark:text-red-400 h-9 w-9 rounded-lg transition-colors flex items-center justify-center">
-                                                <i class="ph-bold ph-trash text-lg"></i>
-                                            </button>
-                                        </div>
+                                    <div class="flex gap-2" onclick="event.stopPropagation()">
+                                        <button onclick="triggerPayment('${person.id}', '${item.id}', event)" class="bg-brand-50 hover:bg-brand-100 text-brand-600 dark:bg-brand-900/30 dark:text-brand-400 dark:hover:bg-brand-900/50 h-8 w-8 sm:h-9 sm:w-9 rounded-lg flex items-center justify-center transition-colors"><i class="ph-bold ph-wallet text-lg"></i></button>
+                                        <button onclick="triggerDeleteItem('${person.id}', '${item.id}', event)" class="bg-red-50 hover:bg-red-100 text-red-500 dark:bg-red-900/20 dark:text-red-400 dark:hover:bg-red-900/40 h-8 w-8 sm:h-9 sm:w-9 rounded-lg flex items-center justify-center transition-colors"><i class="ph-bold ph-trash text-lg"></i></button>
                                     </div>
                                 </div>
                             </div>
-                        `;
-                        }).join('') + `</div>`;
+                        </div>`;
+                    }).join('') + `</div>`;
 
-                    const notesHtml = person.notes 
-                        ? `<div class="text-[11px] text-slate-500 dark:text-slate-400 mt-1 flex items-center justify-between gap-2 bg-slate-50 dark:bg-slate-900/50 p-1.5 rounded-lg border border-slate-100 dark:border-slate-800">
-                               <div class="flex items-center gap-1 overflow-hidden">
-                                   <i class="ph-fill ph-note text-slate-400 shrink-0"></i> 
-                                   <span class="truncate">${person.notes}</span>
-                               </div>
-                               <button onclick="copyNotes('${person.id}', event)" class="shrink-0 bg-slate-200 hover:bg-slate-300 dark:bg-slate-700 dark:hover:bg-slate-600 p-1 rounded transition-colors text-slate-600 dark:text-slate-300 flex items-center justify-center" title="Salin Catatan">
-                                   <i class="ph-bold ph-copy"></i>
-                               </button>
-                           </div>` 
-                        : '';
+                    const notesHtml = person.notes ? `<div class="text-[11px] text-slate-500 dark:text-slate-400 mt-1 mb-2 flex items-center justify-between gap-2 bg-slate-50 dark:bg-slate-900/50 p-2 rounded-lg border border-slate-100 dark:border-slate-800"><div class="flex items-center gap-1 overflow-hidden"><i class="ph-fill ph-note shrink-0"></i> <span class="truncate">${person.notes}</span></div><button onclick="copyNotes('${person.id}', event)" class="shrink-0 bg-slate-200 hover:bg-slate-300 dark:bg-slate-700 dark:hover:bg-slate-600 p-1.5 rounded transition-colors text-slate-600 dark:text-slate-300 flex items-center justify-center"><i class="ph-bold ph-copy"></i></button></div>` : '';
 
                     const card = document.createElement('div');
                     card.className = "bg-white dark:bg-slate-800 rounded-3xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden";
@@ -912,229 +1012,390 @@
                         <div onclick="toggleAccordion('${person.id}')" class="p-4 relative cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/80 transition-colors select-none">
                             <div class="flex justify-between items-start z-10 relative">
                                 <div class="flex items-center gap-3">
-                                    <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-brand-100 to-brand-200 dark:from-brand-900 dark:to-slate-700 flex items-center justify-center text-brand-700 dark:text-brand-300 font-extrabold text-xl shadow-inner shrink-0">
-                                        ${person.name.charAt(0).toUpperCase()}
-                                    </div>
+                                    <div class="w-12 h-12 rounded-2xl bg-gradient-to-br ${bgAvatar} flex items-center justify-center font-extrabold text-xl shadow-inner shrink-0">${person.name.charAt(0).toUpperCase()}</div>
                                     <div class="flex flex-col">
                                         <h3 class="font-bold text-[17px] text-slate-800 dark:text-slate-100 leading-tight">${person.name}</h3>
-                                        <span class="text-[11px] text-slate-400 mt-0.5 flex items-center gap-1">
-                                            <i class="ph-fill ph-whatsapp-logo text-emerald-500"></i> ${person.phone ? `+${person.phone}` : 'Tanpa No. WA'}
-                                        </span>
-                                        ${installmentIndicatorHtml}
+                                        <span class="text-[11px] text-slate-400 mt-0.5 flex items-center gap-1"><i class="ph-fill ph-whatsapp-logo"></i> ${person.phone ? `+${person.phone}` : 'Tanpa No. WA'}</span>
+                                        ${installmentHtml}
                                     </div>
                                 </div>
                                 <div class="flex flex-col items-end gap-1">
                                     <div class="text-right">
                                         <div class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">SISA</div>
-                                        <div class="font-black text-red-500 dark:text-red-400 text-[15px] tracking-tight">${formatNumber(personTotalDebt)}</div>
+                                        <div class="font-black text-red-500 dark:text-red-400 text-[15px] money-value tracking-tight">${formatNumber(personTotalDebt)}</div>
                                     </div>
-                                    <div class="text-slate-300 dark:text-slate-500 transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}">
-                                        <i class="ph-bold ph-caret-up text-lg"></i>
-                                    </div>
+                                    <div class="text-slate-300 dark:text-slate-500 transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}"><i class="ph-bold ph-caret-up text-lg"></i></div>
                                 </div>
                             </div>
-                            
-                            ${personTotalOriginal > 0 ? `
-                                <div class="absolute bottom-0 left-0 right-0 h-1 bg-slate-100 dark:bg-slate-700">
-                                    <div class="h-full bg-emerald-500 progress-striped transition-all duration-700" style="width: ${progressPercent}%"></div>
-                                </div>
-                            ` : ''}
+                            ${personTotalOriginal > 0 ? `<div class="absolute bottom-0 left-0 right-0 h-1 bg-slate-100 dark:bg-slate-700"><div class="h-full bg-emerald-500 progress-striped transition-all duration-700" style="width: ${progressPercent}%"></div></div>` : ''}
                         </div>
                         
                         <div class="accordion-content ${isExpanded ? 'expanded border-t border-slate-100 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/40' : ''}">
                             <div class="p-4 pt-4 pb-2">
                                 ${notesHtml}
-                                <div class="flex justify-between items-center my-4">
+                                <div class="flex justify-between items-center my-3">
                                     <span class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Daftar Tagihan</span>
-                                    <button onclick="triggerAddItem('${person.id}', '${person.name}', event)" class="bg-slate-100 text-brand-700 dark:bg-slate-800 dark:text-brand-400 hover:bg-slate-200 dark:hover:bg-slate-700 px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1 transition-colors border border-slate-200 dark:border-slate-700">
-                                        <i class="ph-bold ph-plus"></i> Bon Baru
-                                    </button>
+                                    <button onclick="triggerAddBulkItem('${person.id}', '${person.name}', event)" class="bg-slate-100 text-brand-700 dark:bg-slate-800 dark:text-brand-400 hover:bg-slate-200 dark:hover:bg-slate-700 px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1 transition-colors border border-slate-200 dark:border-slate-700"><i class="ph-bold ph-plus"></i> Bon Baru</button>
                                 </div>
                                 ${itemsHtml}
                             </div>
-                            
                             <div class="p-4 flex gap-2 border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-800">
                                 <button onclick="paySelectedItems('${person.id}', event)" ${selectedIds.length === 0 ? 'disabled' : ''} class="flex-1 bg-slate-100 text-slate-400 dark:bg-slate-900/50 dark:text-slate-500 border border-slate-200 dark:border-slate-700 disabled:opacity-50 hover:bg-emerald-50 hover:text-emerald-700 dark:hover:bg-emerald-900/30 dark:hover:text-emerald-400 hover:border-emerald-200 dark:hover:border-emerald-800 py-3 rounded-xl text-sm font-bold flex flex-col items-center justify-center transition-all">
-                                    <span class="flex items-center gap-1"><i class="ph-bold ph-check-square-offset"></i> Lunas Terpilih</span>
+                                    <span class="flex items-center gap-1"><i class="ph-bold ph-check-square-offset"></i> Lunas Terpilih ${selectedTotal > 0 ? `<span class="money-value">(${formatNumber(selectedTotal)})</span>` : ''}</span>
                                 </button>
-                                <button onclick="shareWhatsApp('${person.id}', event)" ${person.items.length === 0 ? 'disabled' : ''} class="w-[30%] bg-[#1c8449] hover:bg-[#126b38] text-white disabled:opacity-40 py-3 rounded-xl text-sm font-bold flex flex-col items-center justify-center transition-all shadow-sm">
-                                    <i class="ph-bold ph-whatsapp-logo text-xl"></i>
-                                </button>
+                                <button onclick="shareWhatsApp('${person.id}', event)" ${person.items.length === 0 ? 'disabled' : ''} class="w-[30%] bg-[#1c8449] hover:bg-[#126b38] text-white disabled:opacity-40 py-3 rounded-xl text-sm font-bold flex items-center justify-center transition-all shadow-sm"><i class="ph-bold ph-whatsapp-logo text-xl"></i></button>
                             </div>
-                        </div>
-                    `;
+                        </div>`;
                     container.appendChild(card);
                 });
             }
-
-            document.getElementById('totalGlobalDebt').innerText = formatRupiah(globalDebt);
+            if(document.getElementById('totalGlobalDebt')) document.getElementById('totalGlobalDebt').innerText = settings.privacyMode ? "Rp •••••" : formatRupiah(globalDebt);
             updateHistoryFilters();
         }
 
+        // --- History ---
         function updateHistoryFilters() {
             const filter = document.getElementById('historyFilter');
             const currentVal = filter.value;
-            filter.innerHTML = `<option value="all" class="text-slate-800 bg-white dark:bg-slate-700 dark:text-white">Semua Riwayat Transaksi</option>`;
-            
-            const uniqueNames = [...new Set(appData.history.map(item => item.personName))];
-            uniqueNames.forEach(name => {
-                filter.innerHTML += `<option value="${name}" class="text-slate-800 bg-white dark:bg-slate-700 dark:text-white">${name}</option>`;
-            });
-            if(uniqueNames.includes(currentVal)) filter.value = currentVal;
+            filter.innerHTML = `<option value="all" class="text-slate-800 bg-white dark:bg-slate-700 dark:text-white">Semua Riwayat</option>`;
+            [...new Set(appData.history.map(item => item.personName))].forEach(name => { filter.innerHTML += `<option value="${name}" class="text-slate-800 bg-white dark:bg-slate-700 dark:text-white">${name}</option>`; });
+            if([...new Set(appData.history.map(item => item.personName))].includes(currentVal)) filter.value = currentVal;
         }
 
         function renderHistory() {
             const filterVal = document.getElementById('historyFilter').value;
-            const container = document.getElementById('historyList');
-            container.innerHTML = '';
-            
-            let filtered = appData.history;
-            if (filterVal !== 'all') filtered = appData.history.filter(h => h.personName === filterVal);
+            const container = document.getElementById('historyList'); container.innerHTML = '';
+            let filtered = filterVal !== 'all' ? appData.history.filter(h => h.personName === filterVal) : appData.history;
 
             if (filtered.length === 0) {
-                container.innerHTML = `<div class="text-center p-6 text-slate-400 italic text-sm border border-dashed border-slate-300 dark:border-slate-700 rounded-2xl">Belum ada riwayat transaksi.</div>`;
-                return;
+                container.innerHTML = `<div class="text-center p-6 text-slate-400 italic text-sm border border-dashed border-slate-300 dark:border-slate-700 rounded-2xl">Belum ada riwayat transaksi.</div>`; return;
             }
 
             filtered.forEach(history => {
                 const isFull = history.type === 'full';
-                const itemsDesc = history.items.map(i => `${i.name} (${formatNumber(i.paidAmount)})`).join('<br>');
+                const itemsDesc = history.items.map(i => `${i.name} (<span class="money-value">${formatNumber(i.paidAmount)}</span>)`).join('<br>');
                 const isNgutangin = history.sourceList === 'ngutangin';
-                
-                const changeHtml = history.changeAmount > 0 
-                    ? `<div class="mt-1 text-[10px] font-bold text-orange-600 dark:text-orange-500 bg-orange-50 dark:bg-orange-900/30 px-2 py-1 rounded inline-block">Ada Kembalian: ${formatRupiah(history.changeAmount)}</div>`
-                    : '';
-                    
                 const sourceTitle = isNgutangin ? 'UANG DITERIMA' : 'UANG KELUAR';
                 const sign = isNgutangin ? '+' : '-';
-                const colorTheme = isNgutangin ? 'emerald' : 'red';
+                const colorTheme = isNgutangin ? 'emerald' : 'orange';
 
                 container.innerHTML += `
-                    <div class="bg-white dark:bg-slate-800 rounded-2xl p-4 border-l-4 border-${colorTheme}-500 shadow-sm transition-colors duration-300 relative overflow-hidden">
+                    <div class="bg-white dark:bg-slate-800 rounded-2xl p-4 border-l-4 border-${colorTheme}-500 shadow-sm transition-colors duration-300">
                         <div class="flex justify-between items-start mb-3">
                             <div class="font-bold text-slate-700 dark:text-slate-200 flex items-center gap-2">
-                                ${isFull ? '<div class="bg-emerald-100 text-emerald-600 dark:bg-emerald-900/40 dark:text-emerald-400 p-1 rounded-full"><i class="ph-fill ph-check-circle text-lg"></i></div>' : '<div class="bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-400 p-1 rounded-full"><i class="ph-bold ph-clock-counter-clockwise text-lg"></i></div>'}
+                                ${isFull ? `<div class="bg-${colorTheme}-100 text-${colorTheme}-600 dark:bg-${colorTheme}-900/40 dark:text-${colorTheme}-400 p-1 rounded-full"><i class="ph-fill ph-check-circle text-lg"></i></div>` : '<div class="bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-400 p-1 rounded-full"><i class="ph-bold ph-clock-counter-clockwise text-lg"></i></div>'}
                                 <span>${history.personName} <span class="text-[9px] uppercase font-bold text-slate-500 bg-slate-100 dark:bg-slate-700 px-1.5 py-0.5 rounded ml-1">${isFull ? 'Lunas' : 'Cicilan'}</span></span>
                             </div>
-                            <div class="text-right">
-                                <div class="text-[10px] font-bold text-slate-400 tracking-wider">${history.date}</div>
-                                <div class="text-xs text-slate-500">${history.time}</div>
-                            </div>
+                            <div class="text-right text-[10px] text-slate-400"><div class="font-bold tracking-wider">${history.date}</div><div>${history.time}</div></div>
                         </div>
-                        <div class="text-xs text-slate-600 dark:text-slate-400 mb-3 leading-relaxed border-b border-slate-100 dark:border-slate-700 pb-3">
-                            ${itemsDesc}
-                        </div>
+                        <div class="text-xs text-slate-600 dark:text-slate-400 mb-3 leading-relaxed border-b border-slate-100 dark:border-slate-700 pb-3">${itemsDesc}</div>
                         <div class="flex justify-between items-end">
                             <div class="flex flex-col">
                                 <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">${sourceTitle}</span>
-                                ${changeHtml}
+                                ${history.changeAmount > 0 ? `<div class="mt-1 text-[10px] font-bold text-orange-600 dark:text-orange-500 bg-orange-50 dark:bg-orange-900/30 px-2 py-1 rounded inline-block money-value">Ada Kembalian: ${formatRupiah(history.changeAmount)}</div>` : ''}
                             </div>
-                            <span class="font-black text-${colorTheme}-600 dark:text-${colorTheme}-400 text-lg tracking-tight">
-                                ${sign} ${formatRupiah(history.totalAmount)}
-                            </span>
+                            <span class="font-black text-${colorTheme}-600 dark:text-${colorTheme}-400 text-lg tracking-tight money-value">${sign} ${formatRupiah(history.totalAmount)}</span>
                         </div>
-                    </div>
-                `;
+                    </div>`;
             });
         }
 
-        function exportData() {
-            const dataStr = JSON.stringify(appData);
-            const blob = new Blob([dataStr], { type: 'application/json' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `Backup_Ngutang_${new Date().toLocaleDateString('id-ID').replace(/\//g, '-')}.json`;
-            a.click();
-            URL.revokeObjectURL(url);
-            closeSheet('settingsSheet');
+        function clearHistory() {
+            showConfirm("Hapus Semua Riwayat?", "Riwayat tidak bisa dikembalikan.", () => { appData.history = []; saveData(); }, "Hapus", "bg-red-500 hover:bg-red-600", true);
         }
 
+        // --- Settings & Extra ---
+        function exportData() {
+            const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([JSON.stringify(appData)], { type: 'application/json' }));
+            a.download = `Backup_Ngutang_${new Date().toLocaleDateString('id-ID').replace(/\//g, '-')}.json`; a.click(); closeSheet('settingsSheet');
+        }
         function importData(event) {
-            const file = event.target.files[0];
-            if (!file) return;
-            const reader = new FileReader();
+            const file = event.target.files[0]; if (!file) return; const reader = new FileReader();
             reader.onload = function(e) {
                 try {
                     const imported = JSON.parse(e.target.result);
                     if (imported.ngutangin || imported.active) {
-                        if (imported.active && !imported.ngutangin) { imported.ngutangin = imported.active; delete imported.active; }
-                        if (!imported.utangSaya) imported.utangSaya = [];
-                        appData = imported;
-                        saveData();
-                        closeSheet('settingsSheet');
-                        showAlert("Sukses", "Data berhasil dikembalikan.");
+                        appData.ngutangin = imported.ngutangin || imported.active || []; appData.utangSaya = imported.utangSaya || []; appData.history = imported.history || [];
+                        saveData(); closeSheet('settingsSheet'); showAlert("Sukses", "Data berhasil direstore.");
                     }
                 } catch (err) { showAlert("Error", "Format file tidak valid."); }
-            };
-            reader.readAsText(file);
+            }; reader.readAsText(file);
         }
-
         function triggerClearData() {
-            showConfirm("Hapus SEMUA Data?", "Semua data aktif dan riwayat akan hilang selamanya. Tindakan ini tidak dapat dibatalkan.", () => {
-                appData = { ngutangin: [], utangSaya: [], history: [] };
-                selectedCheckboxes = {};
-                saveData();
-                closeSheet('settingsSheet');
-            }, "Hapus Semua", "bg-red-500 hover:bg-red-600", true);
+            showConfirm("Hapus SEMUA Data?", "Semua data aktif dan riwayat akan hilang selamanya.", () => { appData = { ngutangin: [], utangSaya: [], history: [] }; selectedCheckboxes = {}; saveData(); closeSheet('settingsSheet'); }, "Hapus Semua", "bg-red-500 hover:bg-red-600", true);
         }
 
         function toggleTheme() {
-            document.documentElement.classList.toggle('dark');
-            const isDark = document.documentElement.classList.contains('dark');
-            localStorage.setItem('theme', isDark ? 'dark' : 'light');
-            updateThemeUI(isDark);
+            document.documentElement.classList.toggle('dark'); const isDark = document.documentElement.classList.contains('dark');
+            localStorage.setItem('theme', isDark ? 'dark' : 'light'); updateThemeUI(isDark);
+        }
+        function updateThemeUI(isDark) {
+            const icon = document.getElementById('themeIcon'); const metaTheme = document.getElementById('themeColorMeta');
+            if(isDark) { icon.classList.replace('ph-moon', 'ph-sun'); metaTheme.setAttribute('content', '#1e293b'); } 
+            else { icon.classList.replace('ph-sun', 'ph-moon'); metaTheme.setAttribute('content', '#2563eb'); }
         }
 
-        function updateThemeUI(isDark) {
-            const icon = document.getElementById('themeIcon');
-            const metaTheme = document.getElementById('themeColorMeta');
-            if(isDark) {
-                icon.classList.replace('ph-moon', 'ph-sun');
-                metaTheme.setAttribute('content', '#1e293b'); 
-            } else {
-                icon.classList.replace('ph-sun', 'ph-moon');
-                metaTheme.setAttribute('content', '#2563eb'); 
+        function togglePrivacyMode() {
+            settings.privacyMode = !settings.privacyMode; saveSettings();
+            const icon = document.getElementById('privacyIcon');
+            if(settings.privacyMode) { document.body.classList.add('privacy-on'); icon.classList.replace('ph-eye', 'ph-eye-closed'); } 
+            else { document.body.classList.remove('privacy-on'); icon.classList.replace('ph-eye-closed', 'ph-eye'); }
+            renderUI();
+        }
+
+        // --- STREAMING_CHUNK:PIN Lock System ---
+        function updatePinSettingsUI() {
+            document.getElementById('pinStatusText').innerText = settings.pin ? 'Aktif' : 'Mati';
+            document.getElementById('pinRemoveBtn').classList.toggle('hidden', !settings.pin);
+        }
+
+        function showPinOverlay(mode) {
+            pinMode = mode; enteredPin = ''; tempPin = ''; updatePinDots();
+            const overlay = document.getElementById('pinOverlay');
+            const title = document.getElementById('pinTitle');
+            const sub = document.getElementById('pinSubtitle');
+            
+            document.getElementById('pinCancelBtn').classList.toggle('invisible', mode === 'check');
+            
+            if (mode === 'setup') { title.innerText = "Buat PIN Baru"; sub.innerText = "Masukkan 4 digit PIN pengaman."; }
+            else if (mode === 'confirm') { title.innerText = "Konfirmasi PIN"; sub.innerText = "Masukkan kembali 4 digit PIN."; }
+            else if (mode === 'check') { title.innerText = "Masukkan PIN"; sub.innerText = "Aplikasi terkunci."; }
+            
+            overlay.classList.remove('hidden'); setTimeout(() => overlay.classList.add('opacity-100'), 10);
+        }
+
+        function hidePinOverlay() {
+            const overlay = document.getElementById('pinOverlay'); overlay.classList.remove('opacity-100');
+            setTimeout(() => overlay.classList.add('hidden'), 300);
+        }
+
+        function pressPin(num) {
+            if (enteredPin.length < 4) { enteredPin += num; updatePinDots(); }
+            if (enteredPin.length === 4) setTimeout(processPin, 100);
+        }
+        function deletePin() { if (enteredPin.length > 0) { enteredPin = enteredPin.slice(0, -1); updatePinDots(); } }
+        function updatePinDots() {
+            const dots = document.querySelectorAll('.pin-dot');
+            dots.forEach((dot, idx) => {
+                if (idx < enteredPin.length) dot.classList.replace('bg-slate-300', 'bg-brand-500');
+                else dot.classList.replace('bg-brand-500', 'bg-slate-300');
+                // Dark mode adjustment via specific override is cleaner:
+                if(idx < enteredPin.length) { dot.classList.remove('dark:bg-slate-700'); dot.classList.add('dark:bg-brand-400'); }
+                else { dot.classList.add('dark:bg-slate-700'); dot.classList.remove('dark:bg-brand-400'); }
+            });
+        }
+
+        function processPin() {
+            if (pinMode === 'check') {
+                if (btoa(enteredPin) === settings.pin) hidePinOverlay();
+                else { alert('PIN Salah!'); enteredPin = ''; updatePinDots(); }
+            } else if (pinMode === 'setup') {
+                tempPin = enteredPin; showPinOverlay('confirm');
+            } else if (pinMode === 'confirm') {
+                if (enteredPin === tempPin) {
+                    settings.pin = btoa(enteredPin); saveSettings(); updatePinSettingsUI();
+                    hidePinOverlay(); showAlert("Sukses", "PIN berhasil disimpan."); closeSheet('settingsSheet');
+                } else { alert('PIN tidak cocok! Coba lagi.'); showPinOverlay('setup'); }
             }
         }
 
+        function togglePINSetup() { if (settings.pin) showPinOverlay('setup'); else showPinOverlay('setup'); }
+        function cancelPinSetup() { hidePinOverlay(); }
+        function removePin() {
+            if(confirm("Matikan kunci PIN?")) { settings.pin = null; saveSettings(); updatePinSettingsUI(); hidePinOverlay(); closeSheet('settingsSheet'); }
+        }
+
+        // --- STREAMING_CHUNK:AI Split Bill Tool ---
+        function openSplitBill() {
+            document.getElementById('splitBillView').classList.add('active');
+            renderSplitBillUI();
+        }
+        function closeSplitBill() { document.getElementById('splitBillView').classList.remove('active'); }
+        function openSplitSettings() {
+            document.getElementById('apiKeyInput').value = settings.apiKey;
+            document.getElementById('apiModelSelect').value = settings.aiModel;
+            document.getElementById('testApiResult').innerText = '';
+            openSheet('splitSettingsSheet');
+        }
+
+        function saveApiSettings() {
+            settings.apiKey = document.getElementById('apiKeyInput').value.trim();
+            settings.aiModel = document.getElementById('apiModelSelect').value;
+            saveSettings(); renderSplitBillUI(); closeSheet('splitSettingsSheet');
+        }
+
+        async function testApiKey() {
+            const key = document.getElementById('apiKeyInput').value.trim();
+            const resEl = document.getElementById('testApiResult');
+            if(!key) { resEl.innerHTML = '<span class="text-red-500">Key kosong!</span>'; return; }
+            resEl.innerHTML = '<span class="text-slate-500">Mengecek...</span>';
+            try {
+                const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${key}`);
+                if(res.ok) resEl.innerHTML = '<span class="text-emerald-500">✅ API Key Valid!</span>';
+                else resEl.innerHTML = `<span class="text-red-500">❌ Error ${res.status}: Key salah / limit.</span>`;
+            } catch(e) { resEl.innerHTML = '<span class="text-red-500">❌ Gagal koneksi internet.</span>'; }
+        }
+
+        function renderSplitBillUI() {
+            const apiAlert = document.getElementById('apiAlert');
+            const btnScan = document.getElementById('btnScanImage');
+            if (!settings.apiKey) {
+                apiAlert.classList.remove('hidden'); btnScan.classList.add('opacity-50', 'pointer-events-none');
+            } else {
+                apiAlert.classList.add('hidden'); btnScan.classList.remove('opacity-50', 'pointer-events-none');
+            }
+
+            const list = document.getElementById('splitItemsList');
+            if (splitItems.length === 0) { list.innerHTML = `<div class="text-center p-8 text-slate-400 border border-dashed border-slate-300 dark:border-slate-700 rounded-2xl text-sm italic">Belum ada barang ditambahkan.</div>`; document.getElementById('btnFinishSplit').disabled = true; return; }
+            
+            document.getElementById('btnFinishSplit').disabled = false;
+            list.innerHTML = splitItems.map((item, idx) => `
+                <div class="bg-white dark:bg-slate-800 p-3 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm flex flex-col gap-2">
+                    <div class="flex justify-between items-center">
+                        <input type="text" value="${item.name}" onchange="updateSplitItem(${idx}, 'name', this.value)" class="font-bold text-sm bg-transparent border-none outline-none text-slate-800 dark:text-slate-100 flex-1">
+                        <div class="flex items-center gap-2">
+                            <span class="text-xs font-bold text-slate-400">Rp</span>
+                            <input type="text" inputmode="numeric" value="${formatNumber(item.price)}" oninput="formatPriceInput(this)" onchange="updateSplitItem(${idx}, 'price', getRawNumber(this.value))" class="w-24 text-right font-black bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded px-2 py-1 text-sm outline-none focus:ring-1 focus:ring-brand-500">
+                            <button onclick="removeSplitItem(${idx})" class="text-slate-400 hover:text-red-500 p-1"><i class="ph-bold ph-x"></i></button>
+                        </div>
+                    </div>
+                    <div class="border-t border-slate-100 dark:border-slate-700 pt-2 flex justify-between items-center">
+                        <div class="text-[11px] text-slate-500 dark:text-slate-400 font-medium truncate max-w-[70%]">
+                            ${item.assignedTo.length > 0 ? `Bagi ke: <span class="text-brand-600 dark:text-brand-400 font-bold">${item.assignedTo.join(', ')}</span>` : '<span class="text-orange-500">Belum ada yang dipilih</span>'}
+                        </div>
+                        <button onclick="openAssignSheet(${item.id})" class="text-[10px] font-bold bg-brand-50 dark:bg-brand-900/30 text-brand-600 dark:text-brand-400 px-2 py-1 rounded hover:bg-brand-100">
+                            Pilih Orang
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function addManualSplitItem() { splitItems.push({ id: Date.now(), name: 'Item Baru', price: 0, assignedTo: [] }); renderSplitBillUI(); }
+        function removeSplitItem(idx) { splitItems.splice(idx, 1); renderSplitBillUI(); }
+        function updateSplitItem(idx, key, val) { splitItems[idx][key] = val; renderSplitBillUI(); }
+
+        async function processReceipt(event) {
+            const file = event.target.files[0]; if(!file || !settings.apiKey) return;
+            document.getElementById('aiLoading').classList.remove('hidden');
+            event.target.value = ''; // reset input
+            
+            const reader = new FileReader();
+            reader.onloadend = async () => {
+                const base64Data = reader.result.split(',')[1];
+                try {
+                    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${settings.aiModel}:generateContent?key=${settings.apiKey}`, {
+                        method: 'POST', headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify({
+                            contents: [{ parts: [
+                                { text: "Ekstrak item dari struk ini. Kembalikan HANYA array JSON murni berisikan objek dengan key 'name' (string) dan 'price' (number). Jangan pakai pajak/total. Jangan sertakan markdown atau backticks ```json." },
+                                { inline_data: { mime_type: file.type, data: base64Data } }
+                            ]}]
+                        })
+                    });
+                    const data = await res.json();
+                    let text = data.candidates[0].content.parts[0].text;
+                    text = text.replace(/```json/gi, '').replace(/```/g, '').trim();
+                    const parsed = JSON.parse(text);
+                    if(Array.isArray(parsed)) {
+                        parsed.forEach(i => { if(i.name && i.price) splitItems.push({ id: Date.now()+Math.random(), name: i.name, price: Number(i.price), assignedTo: [] }); });
+                        renderSplitBillUI();
+                    }
+                } catch (err) { showAlert("AI Error", "Gagal membaca struk. Pastikan struk jelas atau ganti Model AI di pengaturan."); }
+                document.getElementById('aiLoading').classList.add('hidden');
+            };
+            reader.readAsDataURL(file);
+        }
+
+        // --- Assign People Flow ---
+        function openAssignSheet(itemId) {
+            activeSplitItemId = itemId;
+            const item = splitItems.find(i => i.id === itemId);
+            document.getElementById('assignItemName').innerText = `${item.name} - Rp ${formatNumber(item.price)}`;
+            
+            let allNames = [...new Set(appData.ngutangin.map(p => p.name))];
+            tempSplitPeople.forEach(n => { if(!allNames.includes(n)) allNames.push(n); });
+            
+            const list = document.getElementById('assignPeopleList');
+            list.innerHTML = allNames.map(name => `
+                <label class="flex items-center gap-3 p-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl cursor-pointer hover:bg-slate-100">
+                    <input type="checkbox" value="${name}" class="custom-checkbox assign-cb" ${item.assignedTo.includes(name) ? 'checked' : ''}>
+                    <span class="font-bold text-slate-700 dark:text-slate-200">${name}</span>
+                </label>
+            `).join('');
+            
+            document.getElementById('assignNewName').value = '';
+            openSheet('assignSplitSheet');
+        }
+
+        function addTempPersonSplit() {
+            const name = document.getElementById('assignNewName').value.trim();
+            if(name && !tempSplitPeople.includes(name) && !appData.ngutangin.find(p=>p.name===name)) {
+                tempSplitPeople.push(name); openAssignSheet(activeSplitItemId); // refresh list
+            }
+        }
+
+        function saveAssignSplit() {
+            const cbs = document.querySelectorAll('.assign-cb:checked');
+            const item = splitItems.find(i => i.id === activeSplitItemId);
+            item.assignedTo = Array.from(cbs).map(cb => cb.value);
+            closeSheet('assignSplitSheet'); renderSplitBillUI();
+        }
+
+        function finalizeSplitBill() {
+            if(splitItems.some(i => i.assignedTo.length === 0)) { showAlert("Ops!", "Ada item yang belum dipilih orangnya."); return; }
+            
+            const todayStr = getTodayDate();
+            const formattedDate = `${new Date().getDate()}/${new Date().getMonth() + 1}`;
+            let hasNewPerson = false;
+
+            splitItems.forEach(item => {
+                const splitPrice = Math.round(item.price / item.assignedTo.length);
+                item.assignedTo.forEach(name => {
+                    let person = appData.ngutangin.find(p => p.name === name);
+                    if (!person) {
+                        person = { id: 'p_' + Date.now()+Math.random(), name: name, phone: '', notes: '', items: [] };
+                        appData.ngutangin.unshift(person);
+                        hasNewPerson = true;
+                    }
+                    person.items.unshift({
+                        id: 'i_' + Date.now()+Math.random(),
+                        date: formattedDate, rawDate: todayStr, dueDate: '',
+                        name: `[Split] ${item.name}`, originalPrice: splitPrice, paidAmount: 0, remainingPrice: splitPrice, paymentHistory: []
+                    });
+                });
+            });
+
+            splitItems = []; tempSplitPeople = []; 
+            closeSplitBill(); saveData(); 
+            showAlert("Berhasil", "Semua bon telah dibagi rata dan dimasukkan ke daftar Ngutangin.");
+            switchTab('ngutangin');
+        }
+
+        // --- PWA Initialization ---
         (function setupPWA() {
             const manifest = {
                 name: "Ngutang", short_name: "Ngutang", start_url: ".", display: "standalone",
                 background_color: "#f8fafc", theme_color: "#2563eb",
-                icons: [{
-                    src: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 256 256'%3E%3Crect width='256' height='256' fill='none'/%3E%3Crect x='32' y='48' width='192' height='160' rx='8' fill='%232563eb'/%3E%3Cpath d='M32 104h192' fill='none' stroke='%23fff' stroke-linecap='round' stroke-linejoin='round' stroke-width='16'/%3E%3C/svg%3E",
-                    sizes: "192x192", type: "image/svg+xml"
-                }]
+                icons: [{ src: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 256 256'%3E%3Crect width='256' height='256' fill='none'/%3E%3Crect x='32' y='48' width='192' height='160' rx='8' fill='%232563eb'/%3E%3Cpath d='M32 104h192' fill='none' stroke='%23fff' stroke-linecap='round' stroke-linejoin='round' stroke-width='16'/%3E%3C/svg%3E", sizes: "192x192", type: "image/svg+xml" }]
             };
             const manifestBlob = new Blob([JSON.stringify(manifest)], {type: 'application/json'});
-            const pwaLink = document.createElement('link');
-            pwaLink.rel = 'manifest';
-            pwaLink.href = URL.createObjectURL(manifestBlob);
-            document.head.appendChild(pwaLink);
-
+            const pwaLink = document.createElement('link'); pwaLink.rel = 'manifest'; pwaLink.href = URL.createObjectURL(manifestBlob); document.head.appendChild(pwaLink);
+            
             let deferredPrompt;
-            window.addEventListener('beforeinstallprompt', (e) => {
-                e.preventDefault();
-                deferredPrompt = e;
-                document.getElementById('installBtn').classList.remove('hidden');
-            });
-
-            document.getElementById('installBtn').addEventListener('click', async () => {
-                if (deferredPrompt) {
-                    deferredPrompt.prompt();
-                    const { outcome } = await deferredPrompt.userChoice;
-                    if (outcome === 'accepted') document.getElementById('installBtn').classList.add('hidden');
-                    deferredPrompt = null;
-                }
-                closeSheet('settingsSheet');
-            });
+            window.addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); deferredPrompt = e; document.getElementById('installBtn').classList.remove('hidden'); });
+            document.getElementById('installBtn').addEventListener('click', async () => { if (deferredPrompt) { deferredPrompt.prompt(); await deferredPrompt.userChoice; deferredPrompt = null; document.getElementById('installBtn').classList.add('hidden'); } closeSheet('settingsSheet'); });
         })();
 
-        // Init App
+        // --- INIT ---
         loadData();
-        renderUI();
-        updateThemeUI(document.documentElement.classList.contains('dark'));
+        if(settings.privacyMode) { document.body.classList.add('privacy-on'); document.getElementById('privacyIcon').classList.replace('ph-eye', 'ph-eye-closed'); }
+        updatePinSettingsUI();
+        switchTab(settings.lastTab);
+        
+        // Show Lock Screen if PIN exists
+        if(settings.pin) showPinOverlay('check');
+
     </script>
 </body>
 </html>
