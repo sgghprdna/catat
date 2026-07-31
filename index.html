@@ -3,17 +3,26 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Catat Bon Teman</title>
+    <meta name="theme-color" content="#2563eb">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>Catat Bon Teman Pro</title>
+    
     <!-- Tailwind CSS untuk Styling -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Phosphor Icons untuk Ikon -->
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    
     <style>
-        /* Mencegah zoom saat tap di iOS */
+        /* Mencegah zoom saat input di-tap pada iOS */
         input[type="text"], input[type="number"], input[type="tel"], input[type="date"] {
             font-size: 16px;
         }
-        /* Transisi untuk accordion */
+        /* Tap highlight removal untuk nuansa native app */
+        * {
+            -webkit-tap-highlight-color: transparent;
+        }
+        /* Transisi Accordion */
         .accordion-content {
             transition: max-height 0.3s ease-in-out, opacity 0.3s ease-in-out;
             max-height: 0;
@@ -21,93 +30,177 @@
             overflow: hidden;
         }
         .accordion-content.expanded {
-            max-height: 1000px; /* Angka sembarang yang cukup besar */
+            max-height: 2000px; /* Cukup besar menampung banyak item */
             opacity: 1;
+        }
+        /* Tab transition */
+        .tab-content {
+            display: none;
+            animation: fadeIn 0.3s ease-in-out;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(5px); }
+            to { opacity: 1; transform: translateY(0); }
         }
     </style>
 </head>
-<body class="bg-slate-50 text-slate-800 font-sans pb-20">
+<body class="bg-slate-100 text-slate-800 font-sans pb-24 min-h-screen relative">
 
-    <!-- Header -->
-    <header class="bg-gradient-to-r from-blue-600 to-indigo-700 text-white p-6 shadow-md rounded-b-3xl mb-6">
+    <header class="bg-gradient-to-br from-blue-600 to-indigo-800 text-white pt-8 pb-6 px-5 shadow-lg rounded-b-3xl sticky top-0 z-20">
         <div class="max-w-md mx-auto">
-            <div class="flex items-center gap-3 mb-2">
-                <div class="bg-white/20 p-2 rounded-lg">
-                    <i class="ph ph-credit-card text-2xl text-white"></i>
+            <div class="flex justify-between items-start mb-4">
+                <div class="flex items-center gap-3">
+                    <div class="bg-white/20 p-2 rounded-xl backdrop-blur-sm">
+                        <i class="ph ph-wallet text-2xl text-white"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-xl font-bold tracking-tight">Catat Bon Teman</h1>
+                        <p class="text-blue-200 text-xs opacity-90">Versi Pro</p>
+                    </div>
                 </div>
-                <h1 class="text-2xl font-bold tracking-tight">Catat Bon Teman</h1>
+                <button onclick="openMenu()" class="p-2 hover:bg-white/10 rounded-lg transition-colors">
+                    <i class="ph ph-dots-three-outline-vertical text-2xl"></i>
+                </button>
             </div>
-            <p class="text-blue-100 text-sm opacity-90">Biar gampang nagih patungan makan 💸</p>
+            
+            <!-- Dashboard Ringkasan -->
+            <div class="bg-white/10 rounded-2xl p-4 border border-white/20 mt-4 backdrop-blur-md">
+                <p class="text-blue-100 text-sm font-medium mb-1">Total Uang di Luar</p>
+                <h2 id="totalGlobal" class="text-3xl font-extrabold tracking-tight">Rp 0</h2>
+            </div>
         </div>
     </header>
 
-    <main class="max-w-md mx-auto px-4 space-y-6">
-        <!-- Add Person Section -->
-        <section class="bg-white rounded-2xl p-5 shadow-sm border border-slate-100">
-            <h2 class="text-lg font-semibold mb-4 flex items-center gap-2 text-slate-700">
-                <i class="ph ph-user text-xl text-blue-500"></i>
-                Tambah Teman
-            </h2>
-            <form onsubmit="addPerson(event)" class="flex flex-col gap-3">
-                <input
-                    type="text"
-                    id="newPersonName"
-                    placeholder="Nama Teman (misal: Budi)"
-                    class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
-                    required
-                />
-                <div class="flex gap-2">
-                    <div class="relative flex-1">
-                        <span class="absolute left-3 top-3.5 text-slate-400"><i class="ph ph-phone text-lg"></i></span>
-                        <input
-                            type="tel"
-                            id="newPersonPhone"
-                            placeholder="No. WA (0812...)"
-                            class="w-full bg-slate-50 border border-slate-200 rounded-xl pl-10 pr-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
-                        />
-                    </div>
-                    <button 
-                        type="submit"
-                        class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-3 rounded-xl transition-colors flex items-center justify-center shadow-sm"
-                    >
-                        <i class="ph-bold ph-plus text-xl"></i>
-                    </button>
-                </div>
-            </form>
-        </section>
-
-        <!-- Container for List of People -->
-        <div id="peopleList" class="space-y-3">
-            <!-- Data akan dirender di sini oleh JavaScript -->
+    <div class="max-w-md mx-auto px-4 mt-6 mb-4">
+        <div class="flex bg-slate-200/70 p-1 rounded-xl">
+            <button onclick="switchTab('active')" id="tabBtn-active" class="flex-1 py-2 text-sm font-bold rounded-lg bg-white shadow-sm text-blue-700 transition-all">
+                Aktif
+            </button>
+            <button onclick="switchTab('history')" id="tabBtn-history" class="flex-1 py-2 text-sm font-medium rounded-lg text-slate-500 hover:text-slate-700 transition-all">
+                Riwayat Lunas
+            </button>
         </div>
+    </div>
+
+    <main class="max-w-md mx-auto px-4 space-y-5">
+        
+        <div id="tab-active" class="tab-content active space-y-5">
+            <!-- Form Tambah Teman -->
+            <section class="bg-white rounded-2xl p-5 shadow-sm border border-slate-200/60">
+                <h2 class="text-base font-bold mb-4 flex items-center gap-2 text-slate-700">
+                    <i class="ph-fill ph-user-plus text-lg text-blue-500"></i>
+                    Tambah Catatan Teman Baru
+                </h2>
+                <form onsubmit="addPerson(event)" class="flex flex-col gap-3">
+                    <input type="text" id="newPersonName" placeholder="Nama Teman (contoh: Budi)" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3.5 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all" required />
+                    <div class="flex gap-2">
+                        <div class="relative flex-1">
+                            <span class="absolute left-3 top-4 text-slate-400"><i class="ph-fill ph-whatsapp-logo text-lg"></i></span>
+                            <input type="tel" id="newPersonPhone" placeholder="No. WA (0812...)" class="w-full bg-slate-50 border border-slate-200 rounded-xl pl-10 pr-4 py-3.5 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all" />
+                        </div>
+                        <button type="submit" class="bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white px-5 py-3.5 rounded-xl transition-colors flex items-center justify-center shadow-md">
+                            <i class="ph-bold ph-plus text-xl"></i>
+                        </button>
+                    </div>
+                </form>
+            </section>
+
+            <!-- Daftar Penghutang Aktif -->
+            <div id="activeList" class="space-y-4"></div>
+        </div>
+
+        <div id="tab-history" class="tab-content space-y-4">
+            <div id="historyList" class="space-y-4"></div>
+        </div>
+
     </main>
 
+    <div id="menuModal" class="fixed inset-0 bg-slate-900/60 z-50 hidden opacity-0 transition-opacity flex items-end sm:items-center justify-center p-4">
+        <div class="bg-white w-full max-w-sm rounded-3xl p-6 shadow-2xl transform translate-y-full sm:translate-y-0 transition-transform duration-300" id="menuModalContent">
+            <div class="flex justify-between items-center mb-5">
+                <h3 class="text-xl font-bold text-slate-800">Pengaturan Data</h3>
+                <button onclick="closeMenu()" class="p-2 bg-slate-100 rounded-full text-slate-500 hover:bg-slate-200"><i class="ph-bold ph-x text-lg"></i></button>
+            </div>
+            
+            <div class="space-y-3">
+                <button onclick="exportData()" class="w-full flex items-center gap-3 p-4 bg-blue-50 border border-blue-100 rounded-2xl text-blue-700 font-semibold hover:bg-blue-100 transition-colors">
+                    <i class="ph-bold ph-download-simple text-2xl"></i>
+                    <div class="text-left">
+                        <div class="text-base">Backup Data (Export)</div>
+                        <div class="text-xs font-normal text-blue-600 opacity-80">Simpan ke file agar tidak hilang</div>
+                    </div>
+                </button>
+                
+                <label class="w-full flex items-center gap-3 p-4 bg-emerald-50 border border-emerald-100 rounded-2xl text-emerald-700 font-semibold hover:bg-emerald-100 transition-colors cursor-pointer">
+                    <i class="ph-bold ph-upload-simple text-2xl"></i>
+                    <div class="text-left">
+                        <div class="text-base">Restore Data (Import)</div>
+                        <div class="text-xs font-normal text-emerald-600 opacity-80">Kembalikan data dari file</div>
+                    </div>
+                    <input type="file" id="importFile" accept=".json" class="hidden" onchange="importData(event)" />
+                </label>
+                
+                <button onclick="clearAllData()" class="w-full flex items-center gap-3 p-4 bg-red-50 border border-red-100 rounded-2xl text-red-600 font-semibold hover:bg-red-100 transition-colors mt-6">
+                    <i class="ph-bold ph-trash text-2xl"></i>
+                    <div class="text-left">
+                        <div class="text-base">Hapus Semua Data</div>
+                    </div>
+                </button>
+            </div>
+        </div>
+    </div>
+
     <script>
-        // State Management
-        let people = JSON.parse(localStorage.getItem('debtTrackerData')) || [];
+        // Data Structure Default
+        const defaultData = { active: [], history: [] };
+        let appData = defaultData;
         let expandedPersonId = null;
         let activeAddFormId = null;
+        let currentTab = 'active';
 
-        // Mendapatkan tanggal hari ini format YYYY-MM-DD untuk default input
-        const getTodayFormat = () => new Date().toISOString().split('T')[0];
+        // Load data from LocalStorage
+        function loadData() {
+            try {
+                const stored = localStorage.getItem('catatHutangProData');
+                if (stored) {
+                    appData = JSON.parse(stored);
+                    // Migrasi/Fallback jika format lama
+                    if(Array.isArray(appData)) {
+                        appData = { active: appData, history: [] };
+                    }
+                }
+            } catch (e) {
+                console.error("Gagal load data", e);
+                appData = defaultData;
+            }
+        }
+
+        // Save data to LocalStorage (Auto-Save)
+        function saveData() {
+            localStorage.setItem('catatHutangProData', JSON.stringify(appData));
+            renderUI();
+        }
 
         // Format Rupiah
         const formatRupiah = (number) => {
             return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(number);
         };
 
-        // Hitung Total
-        const calculateTotal = (items) => {
-            return items.reduce((total, item) => total + item.price, 0);
-        };
+        // Hitung Total Item
+        const calculateTotal = (items) => items.reduce((total, item) => total + item.price, 0);
 
-        // Simpan ke Local Storage dan Render ulang
-        const saveDataAndRender = () => {
-            localStorage.setItem('debtTrackerData', JSON.stringify(people));
-            renderPeople();
-        };
+        // Menghitung Total Uang Global (Semua Penghutang)
+        function calculateGlobalTotal() {
+            let total = 0;
+            appData.active.forEach(person => {
+                total += calculateTotal(person.items);
+            });
+            return total;
+        }
 
-        // Tambah Orang
         function addPerson(e) {
             e.preventDefault();
             const nameInput = document.getElementById('newPersonName');
@@ -115,35 +208,28 @@
             
             const name = nameInput.value.trim();
             let phone = phoneInput.value.replace(/\D/g, '');
-            
             if (!name) return;
+            if (phone.startsWith('0')) phone = '62' + phone.substring(1); // Format kode negara
 
-            if (phone.startsWith('0')) {
-                phone = '62' + phone.substring(1);
-            }
-
-            const newPerson = {
-                id: Date.now().toString(),
+            appData.active.unshift({
+                id: 'p_' + Date.now().toString(),
                 name: name,
                 phone: phone,
                 items: []
-            };
+            });
 
-            people.push(newPerson);
             nameInput.value = '';
             phoneInput.value = '';
-            saveDataAndRender();
+            saveData();
         }
 
-        // Hapus Orang
         function deletePerson(personId) {
-            if (confirm('Yakin ingin menghapus orang ini beserta semua catatannya?')) {
-                people = people.filter(p => p.id !== personId);
-                saveDataAndRender();
+            if (confirm('Hapus teman ini? Semua catatannya akan hilang.')) {
+                appData.active = appData.active.filter(p => p.id !== personId);
+                saveData();
             }
         }
 
-        // Tambah Item / Catatan
         function addItem(e, personId) {
             e.preventDefault();
             const dateInput = document.getElementById(`itemDate_${personId}`).value;
@@ -152,65 +238,72 @@
 
             if (!nameInput || !priceInput || isNaN(priceInput) || !dateInput) return;
 
+            // Format tanggal sesuai permintaan (DD/M) misal: 10/6
             const d = new Date(dateInput);
-            const formattedDate = `${d.getDate()}/${d.getMonth() + 1}`;
+            const formattedDate = `${d.getDate()}/${d.getMonth() + 1}`; 
 
-            people = people.map(person => {
-                if (person.id === personId) {
-                    person.items.push({
-                        id: Date.now().toString(),
-                        date: formattedDate,
-                        rawDate: dateInput,
-                        name: nameInput,
-                        price: parseInt(priceInput)
-                    });
-                }
-                return person;
-            });
+            const person = appData.active.find(p => p.id === personId);
+            if (person) {
+                person.items.push({
+                    id: 'i_' + Date.now().toString(),
+                    date: formattedDate,
+                    rawDate: dateInput,
+                    name: nameInput,
+                    price: parseInt(priceInput)
+                });
+            }
 
-            activeAddFormId = null; // Tutup form
-            saveDataAndRender();
+            activeAddFormId = null; 
+            saveData();
         }
 
-        // Hapus Item
         function deleteItem(personId, itemId, event) {
             event.stopPropagation();
-            people = people.map(person => {
-                if (person.id === personId) {
-                    person.items = person.items.filter(item => item.id !== itemId);
-                }
-                return person;
-            });
-            saveDataAndRender();
-        }
-
-        // Lunas
-        function clearDebt(personId, event) {
-            event.stopPropagation();
-            if (confirm('Tandai semua hutang lunas dan bersihkan catatan?')) {
-                people = people.map(person => {
-                    if (person.id === personId) {
-                        person.items = [];
-                    }
-                    return person;
-                });
-                saveDataAndRender();
+            const person = appData.active.find(p => p.id === personId);
+            if (person) {
+                person.items = person.items.filter(i => i.id !== itemId);
+                saveData();
             }
         }
 
-        // Kirim WA
+        function markAsPaid(personId, event) {
+            event.stopPropagation();
+            if (confirm('Tandai sebagai LUNAS? Catatan akan dipindah ke tab Riwayat.')) {
+                const personIndex = appData.active.findIndex(p => p.id === personId);
+                if (personIndex > -1) {
+                    const person = appData.active[personIndex];
+                    
+                    // Masukkan ke history
+                    appData.history.unshift({
+                        id: 'h_' + Date.now().toString(),
+                        name: person.name,
+                        phone: person.phone,
+                        clearedAt: new Date().toLocaleDateString('id-ID'),
+                        total: calculateTotal(person.items),
+                        items: [...person.items]
+                    });
+
+                    // Bersihkan item di aktif
+                    person.items = [];
+                    // Opsional: Langsung hapus orangnya dari aktif jika lunas, atau biarkan kosong.
+                    // Mari kita biarkan dia kosong agar mudah diisi bon baru besok.
+                    
+                    saveData();
+                    alert(`Catatan hutang ${person.name} berhasil dilunaskan!`);
+                }
+            }
+        }
+
         function shareWhatsApp(personId, event) {
             event.stopPropagation();
-            const person = people.find(p => p.id === personId);
+            const person = appData.active.find(p => p.id === personId);
             
-            if (person.items.length === 0) {
-                alert('Belum ada catatan hutang untuk dibagikan.');
-                return;
-            }
+            if (!person || person.items.length === 0) return;
 
             const total = calculateTotal(person.items);
             let message = ``;
             
+            // Format sesuai blueprint: Tanggal(10/6) Nama(warteg) Harga(10000)
             person.items.forEach((item) => {
                 message += `${item.date} ${item.name} ${item.price}\n`;
             });
@@ -225,165 +318,271 @@
             window.open(whatsappUrl, '_blank');
         }
 
-        // Toggle Accordion
-        function toggleAccordion(personId) {
-            expandedPersonId = expandedPersonId === personId ? null : personId;
-            activeAddFormId = null; // Reset form jika pindah orang
-            renderPeople();
+        function exportData() {
+            const dataStr = JSON.stringify(appData);
+            const dataBlob = new Blob([dataStr], { type: 'application/json' });
+            const url = URL.createObjectURL(dataBlob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `Backup_CatatBon_${new Date().toLocaleDateString('id-ID').replace(/\//g, '-')}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            closeMenu();
         }
 
-        // Tampilkan/Sembunyikan Form Tambah Catatan
+        function importData(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const importedData = JSON.parse(e.target.result);
+                    if (importedData.active && Array.isArray(importedData.active)) {
+                        appData = importedData;
+                        saveData();
+                        alert('Data berhasil dipulihkan (Restore)!');
+                        closeMenu();
+                    } else {
+                        alert('Format file JSON tidak valid untuk aplikasi ini.');
+                    }
+                } catch (err) {
+                    alert('Gagal membaca file. Pastikan file JSON valid.');
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        function clearAllData() {
+            if(confirm("PERINGATAN! Anda yakin ingin menghapus SEMUA data secara permanen?")) {
+                if(confirm("Tindakan ini tidak bisa dibatalkan. Yakin?")) {
+                    appData = { active: [], history: [] };
+                    saveData();
+                    closeMenu();
+                }
+            }
+        }
+
+        function switchTab(tab) {
+            currentTab = tab;
+            document.getElementById('tab-active').classList.remove('active');
+            document.getElementById('tab-history').classList.remove('active');
+            document.getElementById(`tab-${tab}`).classList.add('active');
+
+            // Styling Button
+            document.getElementById('tabBtn-active').className = tab === 'active' 
+                ? "flex-1 py-2 text-sm font-bold rounded-lg bg-white shadow-sm text-blue-700 transition-all"
+                : "flex-1 py-2 text-sm font-medium rounded-lg text-slate-500 hover:text-slate-700 transition-all";
+            
+            document.getElementById('tabBtn-history').className = tab === 'history' 
+                ? "flex-1 py-2 text-sm font-bold rounded-lg bg-white shadow-sm text-blue-700 transition-all"
+                : "flex-1 py-2 text-sm font-medium rounded-lg text-slate-500 hover:text-slate-700 transition-all";
+        }
+
+        function toggleAccordion(personId) {
+            expandedPersonId = expandedPersonId === personId ? null : personId;
+            activeAddFormId = null; 
+            renderUI();
+        }
+
         function toggleAddForm(personId, event) {
             event.stopPropagation();
             activeAddFormId = activeAddFormId === personId ? null : personId;
-            renderPeople();
+            renderUI();
         }
 
-        // Fungsi Utama untuk Merender UI Daftar Orang
-        function renderPeople() {
-            const container = document.getElementById('peopleList');
-            container.innerHTML = '';
+        const openMenu = () => {
+            const modal = document.getElementById('menuModal');
+            const content = document.getElementById('menuModalContent');
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                modal.classList.add('opacity-100');
+                content.classList.remove('translate-y-full');
+            }, 10);
+        };
 
-            if (people.length === 0) {
-                container.innerHTML = `
+        const closeMenu = () => {
+            const modal = document.getElementById('menuModal');
+            const content = document.getElementById('menuModalContent');
+            modal.classList.remove('opacity-100');
+            content.classList.add('translate-y-full');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+            }, 300);
+        };
+
+        const getTodayDate = () => new Date().toISOString().split('T')[0];
+
+        function renderUI() {
+            // Update Dashboard
+            document.getElementById('totalGlobal').innerText = formatRupiah(calculateGlobalTotal());
+
+            // Render Active List
+            const activeContainer = document.getElementById('activeList');
+            activeContainer.innerHTML = '';
+
+            if (appData.active.length === 0) {
+                activeContainer.innerHTML = `
                     <div class="text-center p-8 bg-white rounded-2xl border border-dashed border-slate-300 text-slate-500">
                         <div class="bg-slate-50 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-3">
-                            <i class="ph ph-fork-knife text-3xl text-slate-400"></i>
+                            <i class="ph-fill ph-users text-3xl text-slate-300"></i>
                         </div>
-                        <p>Belum ada catatan.<br/>Mulai dengan menambahkan teman di atas.</p>
-                    </div>
-                `;
-                return;
-            }
+                        <p class="font-medium text-slate-600">Belum ada daftar teman.</p>
+                        <p class="text-sm">Tambahkan teman di form atas.</p>
+                    </div>`;
+            } else {
+                appData.active.forEach(person => {
+                    const total = calculateTotal(person.items);
+                    const isExpanded = expandedPersonId === person.id;
+                    const showForm = activeAddFormId === person.id;
 
-            people.forEach(person => {
-                const total = calculateTotal(person.items);
-                const isExpanded = expandedPersonId === person.id;
-                const showForm = activeAddFormId === person.id;
-
-                // Render Items List
-                let itemsHtml = '';
-                if (person.items.length === 0) {
-                    itemsHtml = `<p class="text-sm text-slate-400 italic text-center py-4 bg-white rounded-xl border border-dashed border-slate-200">Belum ada bon dicatat</p>`;
-                } else {
-                    itemsHtml = `<ul class="space-y-2 mb-4">`;
-                    person.items.forEach(item => {
-                        itemsHtml += `
-                            <li class="flex justify-between items-center bg-white p-3 rounded-xl border border-slate-100 shadow-sm">
+                    // Items List HTML
+                    let itemsHtml = person.items.length === 0 
+                        ? `<div class="text-center py-4 bg-slate-50 rounded-xl border border-dashed border-slate-200 text-slate-400 text-sm">Tidak ada catatan bon</div>`
+                        : `<div class="space-y-2 mb-4">` + person.items.map(item => `
+                            <div class="flex justify-between items-center bg-white p-3.5 rounded-xl border border-slate-100 shadow-sm">
                                 <div class="flex flex-col">
-                                    <span class="text-xs text-slate-400 font-medium mb-0.5">${item.date}</span>
-                                    <span class="text-slate-700 font-medium text-sm">${item.name}</span>
+                                    <span class="text-xs font-bold text-blue-500 mb-0.5"><i class="ph-bold ph-calendar-blank"></i> ${item.date}</span>
+                                    <span class="text-slate-800 font-semibold text-sm capitalize">${item.name}</span>
                                 </div>
-                                <div class="flex items-center gap-3">
-                                    <span class="font-semibold text-slate-700">${item.price}</span>
-                                    <button 
-                                        onclick="deleteItem('${person.id}', '${item.id}', event)"
-                                        class="text-slate-300 hover:text-red-500 bg-slate-50 p-1.5 rounded-lg transition-colors"
-                                    >
-                                        <i class="ph-bold ph-x"></i>
+                                <div class="flex items-center gap-4">
+                                    <span class="font-bold text-slate-700">${item.price}</span>
+                                    <button onclick="deleteItem('${person.id}', '${item.id}', event)" class="text-slate-300 hover:text-red-500 bg-red-50 p-1.5 rounded-lg transition-colors">
+                                        <i class="ph-bold ph-trash"></i>
                                     </button>
                                 </div>
-                            </li>
-                        `;
-                    });
-                    itemsHtml += `</ul>`;
-                }
+                            </div>
+                        `).join('') + `</div>`;
 
-                // Render Add Form vs Button
-                let formOrButtonHtml = '';
-                if (showForm) {
-                    formOrButtonHtml = `
-                        <form onsubmit="addItem(event, '${person.id}')" class="mt-2 bg-blue-50/50 p-3 rounded-xl border border-blue-100 relative shadow-inner">
-                            <button type="button" onclick="toggleAddForm('${person.id}', event)" class="absolute -top-2 -right-2 bg-white rounded-full p-1.5 shadow border border-slate-100 text-slate-500 hover:text-slate-700">
+                    // Form Add Item HTML
+                    let formHtml = showForm 
+                        ? `
+                        <form onsubmit="addItem(event, '${person.id}')" class="mt-3 bg-blue-50/70 p-3.5 rounded-xl border border-blue-100 relative">
+                            <button type="button" onclick="toggleAddForm('${person.id}', event)" class="absolute -top-3 -right-2 bg-white rounded-full p-1.5 shadow-md border border-slate-100 text-slate-500">
                                 <i class="ph-bold ph-x text-sm"></i>
                             </button>
                             <div class="space-y-3">
                                 <div class="flex gap-2">
-                                    <div class="relative w-[40%]">
-                                        <span class="absolute left-2.5 top-2.5 text-slate-400"><i class="ph ph-calendar"></i></span>
-                                        <input type="date" id="itemDate_${person.id}" value="${getTodayFormat()}" class="w-full bg-white border border-slate-200 rounded-lg pl-8 pr-2 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"/>
-                                    </div>
-                                    <input type="text" id="itemName_${person.id}" placeholder="Pesanan (warteg)" class="flex-1 bg-white border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" required/>
+                                    <input type="date" id="itemDate_${person.id}" value="${getTodayDate()}" class="w-[45%] bg-white border border-slate-200 rounded-lg px-2 py-2.5 text-sm focus:ring-2 focus:ring-blue-500"/>
+                                    <input type="text" id="itemName_${person.id}" placeholder="Pesanan (contoh: warteg)" class="flex-1 bg-white border border-slate-200 rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-blue-500" required/>
                                 </div>
                                 <div class="flex gap-2">
                                     <div class="relative flex-1">
-                                        <span class="absolute left-3 top-2 text-slate-500 text-sm font-medium">Rp</span>
-                                        <input type="number" id="itemPrice_${person.id}" placeholder="10000" class="w-full bg-white border border-slate-200 rounded-lg pl-9 pr-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" required/>
+                                        <span class="absolute left-3 top-2.5 text-slate-500 text-sm font-bold">Rp</span>
+                                        <input type="number" id="itemPrice_${person.id}" placeholder="10000" class="w-full bg-white border border-slate-200 rounded-lg pl-9 pr-3 py-2.5 text-sm focus:ring-2 focus:ring-blue-500" required/>
                                     </div>
-                                    <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-lg text-sm font-semibold transition-colors shadow-sm">
-                                        Simpan
-                                    </button>
+                                    <button type="submit" class="bg-blue-600 text-white px-5 py-2.5 rounded-lg text-sm font-bold shadow-md">Tambah</button>
                                 </div>
                             </div>
                         </form>
-                    `;
-                } else {
-                    formOrButtonHtml = `
-                        <button onclick="toggleAddForm('${person.id}', event)" class="w-full py-2.5 bg-white border border-slate-200 text-blue-600 rounded-xl flex items-center justify-center gap-2 hover:border-blue-300 hover:bg-blue-50 transition-all text-sm font-semibold shadow-sm">
-                            <i class="ph-bold ph-plus"></i> Tambah Catatan Baru
+                        `
+                        : `
+                        <button onclick="toggleAddForm('${person.id}', event)" class="w-full py-3 bg-white border-2 border-dashed border-slate-300 text-slate-500 rounded-xl flex items-center justify-center gap-2 hover:border-blue-400 hover:text-blue-600 transition-all font-semibold shadow-sm">
+                            <i class="ph-bold ph-plus-circle text-lg"></i> Bon Baru
                         </button>
-                    `;
-                }
+                        `;
 
-                // Main Card Template
-                const card = document.createElement('div');
-                card.className = "bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden transition-all";
-                card.innerHTML = `
-                    <div onclick="toggleAccordion('${person.id}')" class="p-4 bg-white flex justify-between items-center cursor-pointer hover:bg-slate-50 active:bg-slate-100 transition-colors">
-                        <div class="flex flex-col">
-                            <h3 class="font-bold text-lg text-slate-800">${person.name}</h3>
-                            <span class="text-xs text-slate-500 flex items-center gap-1 mt-0.5">
-                                <i class="ph-fill ph-phone text-xs"></i> ${person.phone ? `+${person.phone}` : 'Tanpa nomor WA'}
-                            </span>
-                        </div>
-                        <div class="flex items-center gap-3">
-                            <div class="text-right">
-                                <div class="text-xs text-slate-400 font-medium">Total Hutang</div>
-                                <div class="font-bold text-blue-600">${formatRupiah(total)}</div>
+                    const card = document.createElement('div');
+                    card.className = "bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden";
+                    card.innerHTML = `
+                        <div onclick="toggleAccordion('${person.id}')" class="p-4 flex justify-between items-center cursor-pointer hover:bg-slate-50 transition-colors">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold text-lg">
+                                    ${person.name.charAt(0).toUpperCase()}
+                                </div>
+                                <div class="flex flex-col">
+                                    <h3 class="font-bold text-lg text-slate-800 leading-tight">${person.name}</h3>
+                                    <span class="text-xs text-slate-400 mt-0.5">
+                                        ${person.phone ? `<i class="ph-fill ph-whatsapp-logo text-emerald-500"></i> +${person.phone}` : 'Tanpa No. WA'}
+                                    </span>
+                                </div>
                             </div>
-                            <div class="text-slate-400 bg-slate-100 p-1.5 rounded-full flex items-center justify-center h-8 w-8 transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}">
-                                <i class="ph-bold ph-caret-down text-lg"></i>
+                            <div class="flex items-center gap-3">
+                                <div class="text-right">
+                                    <div class="text-[11px] text-slate-400 font-bold uppercase tracking-wide">Total</div>
+                                    <div class="font-bold text-red-500">${formatRupiah(total)}</div>
+                                </div>
+                                <div class="text-slate-400 transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}">
+                                    <i class="ph-bold ph-caret-down text-xl"></i>
+                                </div>
                             </div>
-                        </div>
-                    </div>
-                    
-                    <div class="accordion-content ${isExpanded ? 'expanded border-t border-slate-100 bg-slate-50' : ''}">
-                        <div class="p-4">
-                            <div class="flex justify-between items-center mb-3">
-                                <h4 class="text-sm font-semibold text-slate-600 flex items-center gap-2">
-                                    <i class="ph-fill ph-fork-knife"></i> Rincian Pesanan
-                                </h4>
-                                <button onclick="deletePerson('${person.id}')" class="text-xs text-red-500 hover:text-red-600 font-medium flex items-center gap-1 bg-red-50 px-2 py-1 rounded-md">
-                                    <i class="ph ph-trash"></i> Hapus Orang
-                                </button>
-                            </div>
-                            
-                            ${itemsHtml}
-                            ${formOrButtonHtml}
                         </div>
                         
-                        <div class="bg-white p-4 flex gap-2 border-t border-slate-100">
-                            <button onclick="clearDebt('${person.id}', event)" ${person.items.length === 0 ? 'disabled' : ''} class="flex-1 bg-slate-50 border border-slate-200 hover:bg-emerald-50 hover:text-emerald-700 hover:border-emerald-200 disabled:opacity-50 disabled:hover:bg-slate-50 text-slate-700 py-3 rounded-xl text-sm font-bold flex items-center justify-center gap-2 transition-all shadow-sm">
-                                <i class="ph-bold ph-check text-lg"></i> Lunas
-                            </button>
-                            <button onclick="shareWhatsApp('${person.id}', event)" ${person.items.length === 0 ? 'disabled' : ''} class="flex-1 bg-[#25D366] hover:bg-[#128C7E] disabled:opacity-50 text-white py-3 rounded-xl text-sm font-bold flex items-center justify-center gap-2 transition-all shadow-sm">
-                                <i class="ph-bold ph-paper-plane-right text-lg"></i> Kirim WA
-                            </button>
+                        <div class="accordion-content ${isExpanded ? 'expanded border-t border-slate-100 bg-slate-50/50' : ''}">
+                            <div class="p-4">
+                                ${itemsHtml}
+                                ${formHtml}
+                            </div>
+                            <div class="p-4 flex gap-2 border-t border-slate-100 bg-white">
+                                <button onclick="markAsPaid('${person.id}', event)" ${person.items.length === 0 ? 'disabled' : ''} class="flex-1 bg-white border-2 border-emerald-500 text-emerald-600 hover:bg-emerald-50 disabled:opacity-40 disabled:border-slate-200 disabled:text-slate-400 py-2.5 rounded-xl text-sm font-bold flex items-center justify-center gap-2 transition-all">
+                                    <i class="ph-bold ph-check-circle text-lg"></i> Lunas
+                                </button>
+                                <button onclick="shareWhatsApp('${person.id}', event)" ${person.items.length === 0 ? 'disabled' : ''} class="flex-1 bg-[#25D366] hover:bg-[#128C7E] text-white disabled:opacity-40 disabled:bg-slate-300 py-2.5 rounded-xl text-sm font-bold flex items-center justify-center gap-2 transition-all shadow-md">
+                                    <i class="ph-bold ph-whatsapp-logo text-lg"></i> Kirim WA
+                                </button>
+                                <button onclick="deletePerson('${person.id}')" class="px-4 bg-slate-100 text-slate-500 hover:text-red-500 hover:bg-red-50 py-2.5 rounded-xl transition-all">
+                                    <i class="ph-bold ph-trash"></i>
+                                </button>
+                            </div>
                         </div>
-                    </div>
-                `;
-                container.appendChild(card);
-            });
+                    `;
+                    activeContainer.appendChild(card);
+                });
+            }
 
-            // Fokus ke input nama item jika form baru saja dibuka
-            if (activeAddFormId) {
-                const nameInput = document.getElementById(`itemName_${activeAddFormId}`);
-                if(nameInput) nameInput.focus();
+            // Render History List
+            const historyContainer = document.getElementById('historyList');
+            historyContainer.innerHTML = '';
+            if (appData.history.length === 0) {
+                historyContainer.innerHTML = `<div class="text-center p-6 text-slate-400">Belum ada riwayat hutang lunas.</div>`;
+            } else {
+                appData.history.forEach(history => {
+                    historyContainer.innerHTML += `
+                        <div class="bg-white rounded-2xl p-4 border border-emerald-100 shadow-sm opacity-90">
+                            <div class="flex justify-between items-center mb-2">
+                                <div class="font-bold text-slate-700 flex items-center gap-2">
+                                    <i class="ph-fill ph-check-circle text-emerald-500"></i> ${history.name}
+                                </div>
+                                <div class="text-xs text-slate-400">${history.clearedAt}</div>
+                            </div>
+                            <div class="text-sm text-slate-500 mb-2">Sebanyak ${history.items.length} item telah dilunasi.</div>
+                            <div class="font-bold text-emerald-600">Total: ${formatRupiah(history.total)}</div>
+                        </div>
+                    `;
+                });
             }
         }
 
-        // Render awal saat halaman dimuat
-        renderPeople();
+        // Initialize App
+        loadData();
+        renderUI();
+
+        // Inject PWA Manifest Secara Dinamis (Single File Trick)
+        function injectManifest() {
+            const manifest = {
+                name: "Catat Bon Teman",
+                short_name: "Catat Bon",
+                start_url: ".",
+                display: "standalone",
+                background_color: "#f8fafc",
+                theme_color: "#2563eb",
+                icons: [{
+                    src: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 256 256'%3E%3Crect width='256' height='256' fill='none'/%3E%3Crect x='32' y='48' width='192' height='160' rx='8' fill='%232563eb'/%3E%3Cpath d='M32 104h192' fill='none' stroke='%23fff' stroke-linecap='round' stroke-linejoin='round' stroke-width='16'/%3E%3C/svg%3E",
+                    sizes: "192x192",
+                    type: "image/svg+xml"
+                }]
+            };
+            const manifestBlob = new Blob([JSON.stringify(manifest)], {type: 'application/json'});
+            const manifestUrl = URL.createObjectURL(manifestBlob);
+            const pwaLink = document.createElement('link');
+            pwaLink.rel = 'manifest';
+            pwaLink.href = manifestUrl;
+            document.head.appendChild(pwaLink);
+        }
+        
+        injectManifest();
     </script>
 </body>
 </html>
