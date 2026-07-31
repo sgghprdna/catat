@@ -58,13 +58,14 @@
         /* Custom Checkbox */
         .custom-checkbox {
             appearance: none;
-            width: 22px; height: 22px;
+            width: 24px; height: 24px;
             border-radius: 6px;
             border: 2px solid #cbd5e1;
             display: inline-flex; align-items: center; justify-content: center;
             cursor: pointer; transition: all 0.2s;
+            background-color: transparent;
         }
-        .dark .custom-checkbox { border-color: #475569; background: #1e293b; }
+        .dark .custom-checkbox { border-color: #475569; }
         .custom-checkbox:checked { background-color: #2563eb; border-color: #2563eb; }
         .custom-checkbox:checked::after {
             content: '✓'; color: white; font-weight: bold; font-size: 14px;
@@ -100,15 +101,9 @@
                 </div>
             </div>
             
-            <div class="grid grid-cols-2 gap-3 mt-4">
-                <div class="bg-white/10 rounded-2xl p-4 border border-white/20 backdrop-blur-md">
-                    <p class="text-blue-100 dark:text-slate-300 text-[11px] font-semibold mb-1 uppercase tracking-wider">Total Utang (Sisa)</p>
-                    <h2 id="totalGlobalDebt" class="text-2xl font-extrabold tracking-tight truncate">Rp 0</h2>
-                </div>
-                <div class="bg-white/5 rounded-2xl p-4 border border-white/10 backdrop-blur-md">
-                    <p class="text-blue-100/70 dark:text-slate-400 text-[11px] font-semibold mb-1 uppercase tracking-wider">Uang Masuk</p>
-                    <h2 id="totalGlobalPaid" class="text-xl font-bold tracking-tight truncate text-emerald-300">Rp 0</h2>
-                </div>
+            <div class="mt-4">
+                <p class="text-blue-100 dark:text-slate-300 text-[11px] font-semibold mb-1 uppercase tracking-wider">Total Utang (Sisa)</p>
+                <h2 id="totalGlobalDebt" class="text-3xl font-extrabold tracking-tight truncate">Rp 0</h2>
             </div>
         </div>
     </header>
@@ -136,8 +131,7 @@
             <div class="flex items-center bg-white dark:bg-slate-800 p-1.5 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm">
                 <div class="pl-3 text-slate-400"><i class="ph-bold ph-funnel"></i></div>
                 <select id="historyFilter" onchange="renderHistory()" class="w-full bg-transparent border-none text-sm font-medium focus:ring-0 text-slate-700 dark:text-slate-200 py-2.5 px-2 outline-none appearance-none">
-                    <option value="all">Semua Riwayat Lunas & Cicilan</option>
-                    <!-- Options populated via JS -->
+                    <option value="all">Semua Riwayat Transaksi</option>
                 </select>
                 <div class="pr-3 text-slate-400 pointer-events-none"><i class="ph-bold ph-caret-down text-sm"></i></div>
             </div>
@@ -150,7 +144,6 @@
         <i class="ph-bold ph-user-plus text-2xl"></i>
     </button>
 
-    
     <!-- Sheet: Add Person -->
     <div id="addPersonSheet" class="fixed inset-0 z-50 flex items-end justify-center hidden-sheet">
         <div class="bottom-sheet-overlay absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onclick="closeSheet('addPersonSheet')"></div>
@@ -200,7 +193,7 @@
         <div class="bottom-sheet-overlay absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onclick="closeSheet('paymentSheet')"></div>
         <div class="bottom-sheet-content relative w-full max-w-md bg-white dark:bg-slate-800 rounded-t-3xl p-6 shadow-2xl">
             <div class="w-12 h-1.5 bg-slate-200 dark:bg-slate-700 rounded-full mx-auto mb-6"></div>
-            <h3 class="text-xl font-bold mb-1">Bayar / Cicil Item</h3>
+            <h3 class="text-xl font-bold mb-1">Bayar / Cicil</h3>
             <p id="payItemTitle" class="text-sm font-medium text-slate-500 dark:text-slate-400 mb-4 bg-slate-100 dark:bg-slate-900 p-3 rounded-lg border border-slate-200 dark:border-slate-700 truncate"></p>
             
             <form onsubmit="processPayment(event)" class="space-y-4">
@@ -209,18 +202,21 @@
                 <input type="hidden" id="payMaxAmount">
                 
                 <div>
-                    <label class="block text-xs font-bold text-slate-400 uppercase mb-2">Jumlah Pembayaran</label>
+                    <label class="block text-xs font-bold text-slate-400 uppercase mb-2">Uang yang dibayarkan</label>
                     <div class="relative">
                         <span class="absolute left-4 top-3.5 text-brand-600 dark:text-brand-400 font-bold">Rp</span>
-                        <input type="text" inputmode="numeric" oninput="formatPriceInput(this)" id="payAmountInput" class="w-full bg-brand-50 dark:bg-slate-900 border-2 border-brand-200 dark:border-brand-700 rounded-xl pl-12 pr-4 py-3.5 text-2xl font-bold focus:ring-brand-500 text-brand-700 dark:text-brand-300" required/>
+                        <input type="text" inputmode="numeric" oninput="formatPriceInput(this); calculatePaymentFeedback();" id="payAmountInput" class="w-full bg-brand-50 dark:bg-slate-900 border-2 border-brand-200 dark:border-brand-700 rounded-xl pl-12 pr-4 py-3.5 text-2xl font-bold focus:ring-brand-500 text-brand-700 dark:text-brand-300" required/>
                     </div>
-                    <div class="flex justify-between items-center mt-2">
+                    <!-- Area Kembalian / Sisa -->
+                    <div id="paymentFeedback" class="mt-2 min-h-[20px] text-sm"></div>
+
+                    <div class="flex justify-between items-center mt-3">
                         <span class="text-xs text-slate-400">Pilih cepat:</span>
-                        <button type="button" onclick="setFullPayment()" id="btnSetFull" class="text-xs font-bold bg-brand-100 dark:bg-brand-900/40 text-brand-600 dark:text-brand-300 px-3 py-1.5 rounded-lg border border-brand-200 dark:border-brand-700">Lunas Semua (Rp 0)</button>
+                        <button type="button" onclick="setFullPayment()" id="btnSetFull" class="text-xs font-bold bg-brand-100 dark:bg-brand-900/40 text-brand-600 dark:text-brand-300 px-3 py-1.5 rounded-lg border border-brand-200 dark:border-brand-700 transition-colors">Lunas (Rp 0)</button>
                     </div>
                 </div>
                 
-                <button type="submit" class="w-full mt-4 bg-emerald-500 hover:bg-emerald-600 text-white px-5 py-4 rounded-xl font-bold shadow-md flex justify-center items-center gap-2 text-lg">
+                <button type="submit" class="w-full mt-2 bg-brand-600 hover:bg-brand-700 text-white px-5 py-4 rounded-xl font-bold shadow-md flex justify-center items-center gap-2 text-lg">
                     <i class="ph-bold ph-check-circle text-xl"></i> Konfirmasi Pembayaran
                 </button>
             </form>
@@ -258,11 +254,10 @@
         </div>
     </div>
 
-    <!-- Custom Dialogs System -->
     <div id="customDialogOverlay" class="fixed inset-0 bg-slate-900/70 z-[100] hidden flex items-center justify-center p-4 backdrop-blur-sm opacity-0 transition-opacity">
         <div id="customDialogBox" class="bg-white dark:bg-slate-800 w-full max-w-sm rounded-3xl p-6 shadow-2xl transform scale-95 transition-transform">
             <h3 id="dialogTitle" class="text-xl font-bold text-slate-800 dark:text-white mb-2">Konfirmasi</h3>
-            <p id="dialogMessage" class="text-slate-500 dark:text-slate-400 mb-6 leading-relaxed">Pesan</p>
+            <p id="dialogMessage" class="text-slate-500 dark:text-slate-400 mb-6 leading-relaxed text-sm">Pesan</p>
             <div class="flex gap-3 justify-end">
                 <button id="dialogBtnCancel" onclick="closeDialog()" class="px-5 py-2.5 rounded-xl font-bold text-slate-500 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-700 transition-colors">Batal</button>
                 <button id="dialogBtnConfirm" class="px-5 py-2.5 rounded-xl font-bold bg-brand-600 text-white hover:bg-brand-700 transition-colors">Ya, Lanjutkan</button>
@@ -277,10 +272,10 @@
         let expandedPersonId = null;
         let selectedCheckboxes = {}; // { personId: [itemId1, itemId2] }
 
-        // --- Core Helpers ---
+        // Format Helpers
         const formatRupiah = (num) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(num);
         const formatNumber = (num) => new Intl.NumberFormat('id-ID').format(num);
-        const getRawNumber = (str) => parseInt(str.replace(/[^0-9]/g, '')) || 0;
+        const getRawNumber = (str) => parseInt(str.toString().replace(/[^0-9]/g, '')) || 0;
         const getTodayDate = () => new Date().toISOString().split('T')[0];
         
         function formatPriceInput(input) {
@@ -293,28 +288,32 @@
             return `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
         }
 
-        // --- Data Management ---
+        // Data Management
         function loadData() {
             try {
-                const stored = localStorage.getItem('ngutangProDataV2');
-                if (stored) appData = JSON.parse(stored);
-                // Migrasi data lama v1 jika ada
-                else if (localStorage.getItem('ngutangProData')) {
-                    const old = JSON.parse(localStorage.getItem('ngutangProData'));
-                    // adapt to new structure if needed, or just assign
-                    if(old.active) appData = old;
-                    localStorage.removeItem('ngutangProData'); // Bersihkan
-                    saveData();
+                const stored = localStorage.getItem('ngutangProDataV3');
+                if (stored) {
+                    appData = JSON.parse(stored);
+                    // Migrasi internal: Pastikan setiap item punya array paymentHistory
+                    appData.active.forEach(p => {
+                        p.items.forEach(i => {
+                            if(!i.paymentHistory) i.paymentHistory = [];
+                        });
+                    });
+                } else if (localStorage.getItem('ngutangProDataV2')) {
+                    // Fallback ke data v2 jika ada
+                    appData = JSON.parse(localStorage.getItem('ngutangProDataV2'));
+                    appData.active.forEach(p => p.items.forEach(i => { if(!i.paymentHistory) i.paymentHistory = []; }));
                 }
             } catch (e) { appData = defaultData; }
         }
 
         function saveData() {
-            localStorage.setItem('ngutangProDataV2', JSON.stringify(appData));
+            localStorage.setItem('ngutangProDataV3', JSON.stringify(appData));
             renderUI();
         }
 
-        // --- Dialog System (Replacing Alert/Confirm) ---
+        // Dialog System
         let dialogConfirmCallback = null;
         function showConfirm(title, message, callback, btnText = "Ya, Lanjutkan", btnColor = "bg-brand-600") {
             document.getElementById('dialogTitle').innerText = title;
@@ -325,7 +324,6 @@
             btnConfirm.className = `px-5 py-2.5 rounded-xl font-bold text-white transition-colors ${btnColor}`;
             
             document.getElementById('dialogBtnCancel').classList.remove('hidden');
-            
             dialogConfirmCallback = callback;
             
             const overlay = document.getElementById('customDialogOverlay');
@@ -338,16 +336,15 @@
             }, 10);
         }
 
-        function showAlert(title, message) {
+        function showAlert(title, message, isWarning = false) {
             document.getElementById('dialogTitle').innerText = title;
             document.getElementById('dialogMessage').innerText = message;
             
             const btnConfirm = document.getElementById('dialogBtnConfirm');
             btnConfirm.innerText = "Tutup";
-            btnConfirm.className = `px-5 py-2.5 rounded-xl font-bold bg-brand-600 text-white transition-colors`;
+            btnConfirm.className = `px-5 py-2.5 rounded-xl font-bold text-white transition-colors ${isWarning ? 'bg-orange-500 hover:bg-orange-600' : 'bg-brand-600 hover:bg-brand-700'}`;
             
             document.getElementById('dialogBtnCancel').classList.add('hidden');
-            
             dialogConfirmCallback = null;
             
             const overlay = document.getElementById('customDialogOverlay');
@@ -355,7 +352,7 @@
             overlay.classList.remove('hidden');
             setTimeout(() => {
                 overlay.classList.add('opacity-100');
-                box.classList.remove('scale-100'); // ensure reset
+                box.classList.remove('scale-100');
             }, 10);
         }
 
@@ -373,7 +370,7 @@
             setTimeout(() => overlay.classList.add('hidden'), 200);
         }
 
-        // --- UI Interactions ---
+        // Tabs & Sheets
         function switchTab(tab) {
             document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
             document.getElementById(`tab-${tab}`).classList.add('active');
@@ -403,8 +400,6 @@
         function openSheet(sheetId) {
             const sheet = document.getElementById(sheetId);
             sheet.classList.remove('hidden-sheet');
-            
-            // Set default date if AddItem
             if (sheetId === 'addItemSheet') {
                 document.getElementById('newItemDate').value = getTodayDate();
                 setTimeout(() => document.getElementById('newItemName').focus(), 300);
@@ -415,13 +410,14 @@
             document.getElementById(sheetId).classList.add('hidden-sheet');
         }
 
+        // CRUD Operations
         function addPerson(e) {
             e.preventDefault();
             const nameInput = document.getElementById('newPersonName');
             const phoneInput = document.getElementById('newPersonPhone');
-            
             const name = nameInput.value.trim();
             let phone = phoneInput.value.replace(/\D/g, '');
+            
             if (!name) return;
             if (phone.startsWith('0')) phone = '62' + phone.substring(1); 
 
@@ -476,13 +472,14 @@
                     name: nameInput,
                     originalPrice: rawPrice,
                     paidAmount: 0,
-                    remainingPrice: rawPrice
+                    remainingPrice: rawPrice,
+                    paymentHistory: [] // Array untuk simpan riwayat cicilan
                 });
             }
 
             closeSheet('addItemSheet');
-            if (expandedPersonId !== personId) toggleAccordion(personId); // Auto buka accordion
-            else saveData(); // Jika sudah buka, render saja
+            if (expandedPersonId !== personId) toggleAccordion(personId); 
+            else saveData(); 
         }
 
         function triggerDeleteItem(personId, itemId, event) {
@@ -491,7 +488,6 @@
                 const person = appData.active.find(p => p.id === personId);
                 if (person) {
                     person.items = person.items.filter(i => i.id !== itemId);
-                    // Remove from selection if exists
                     if (selectedCheckboxes[personId]) {
                         selectedCheckboxes[personId] = selectedCheckboxes[personId].filter(id => id !== itemId);
                     }
@@ -500,6 +496,7 @@
             }, "Hapus", "bg-red-500 hover:bg-red-600");
         }
 
+        // Payment System & Real-time Feedback
         function triggerPayment(personId, itemId, event) {
             event.stopPropagation();
             const person = appData.active.find(p => p.id === personId);
@@ -509,8 +506,9 @@
             document.getElementById('payItemId').value = itemId;
             document.getElementById('payMaxAmount').value = item.remainingPrice;
             document.getElementById('payAmountInput').value = '';
+            document.getElementById('paymentFeedback').innerHTML = ''; // Reset
             
-            document.getElementById('payItemTitle').innerText = `${item.name} (Sisa: ${formatRupiah(item.remainingPrice)})`;
+            document.getElementById('payItemTitle').innerText = `${item.name} (Sisa Utang: ${formatRupiah(item.remainingPrice)})`;
             document.getElementById('btnSetFull').innerText = `Lunas (${formatNumber(item.remainingPrice)})`;
             
             openSheet('paymentSheet');
@@ -521,6 +519,28 @@
             const max = document.getElementById('payMaxAmount').value;
             const input = document.getElementById('payAmountInput');
             input.value = formatNumber(max);
+            calculatePaymentFeedback(); // Trigger feedback
+        }
+
+        function calculatePaymentFeedback() {
+            const input = document.getElementById('payAmountInput');
+            const max = parseInt(document.getElementById('payMaxAmount').value) || 0;
+            const payAmount = getRawNumber(input.value);
+            const feedbackEl = document.getElementById('paymentFeedback');
+            
+            if (!payAmount) {
+                feedbackEl.innerHTML = '';
+                return;
+            }
+            
+            const diff = payAmount - max;
+            if (diff > 0) {
+                feedbackEl.innerHTML = `<span class="text-orange-500 dark:text-orange-400 font-bold tracking-tight">⚠️ Kembalian: ${formatRupiah(diff)}</span>`;
+            } else if (diff < 0) {
+                feedbackEl.innerHTML = `<span class="text-brand-600 dark:text-brand-400 font-medium">Sisa utang nanti: ${formatRupiah(Math.abs(diff))}</span>`;
+            } else {
+                feedbackEl.innerHTML = `<span class="text-emerald-500 font-bold">Lunas Pas!</span>`;
+            }
         }
 
         function processPayment(e) {
@@ -537,18 +557,23 @@
 
             if (payAmount <= 0) return;
             
-            const actualPayment = Math.min(payAmount, item.remainingPrice);
+            // Hitung logika kembalian
+            const actualPaymentToDebt = Math.min(payAmount, item.remainingPrice);
+            const changeAmount = payAmount > item.remainingPrice ? payAmount - item.remainingPrice : 0;
             
-            // Rekam Histori Transaksi
-            recordHistoryEvent(person, [{ name: item.name, paidAmount: actualPayment }], actualPayment, item.remainingPrice <= actualPayment);
+            // Rekam di array history item
+            if(!item.paymentHistory) item.paymentHistory = [];
+            item.paymentHistory.push(actualPaymentToDebt);
 
-            item.paidAmount += actualPayment;
-            item.remainingPrice -= actualPayment;
+            // Rekam Histori Global
+            recordHistoryEvent(person, [{ name: item.name, paidAmount: actualPaymentToDebt }], actualPaymentToDebt, item.remainingPrice <= actualPaymentToDebt, changeAmount);
+
+            item.paidAmount += actualPaymentToDebt;
+            item.remainingPrice -= actualPaymentToDebt;
 
             // Jika lunas, hapus dari list aktif
             if (item.remainingPrice <= 0) {
                 person.items.splice(itemIndex, 1);
-                // Clear from checkboxes
                 if (selectedCheckboxes[personId]) {
                     selectedCheckboxes[personId] = selectedCheckboxes[personId].filter(id => id !== itemId);
                 }
@@ -556,9 +581,13 @@
 
             closeSheet('paymentSheet');
             saveData();
-            showAlert("Berhasil", "Pembayaran / Cicilan berhasil dicatat!");
+            
+            if (changeAmount > 0) {
+                showAlert("Transaksi Selesai", `Hutang lunas.\n\nJangan lupa berikan kembalian sebesar:\n${formatRupiah(changeAmount)}`, true);
+            }
         }
 
+        // Lunas Multi Item
         function toggleCheckbox(personId, itemId) {
             if (!selectedCheckboxes[personId]) selectedCheckboxes[personId] = [];
             const index = selectedCheckboxes[personId].indexOf(itemId);
@@ -567,7 +596,7 @@
             } else {
                 selectedCheckboxes[personId].push(itemId);
             }
-            renderUI(); // Update UI for the Lunas button counter
+            renderUI(); 
         }
 
         function paySelectedItems(personId, event) {
@@ -588,25 +617,23 @@
                         totalPaidThisTransaction += item.remainingPrice;
                         paidItemsInfo.push({ name: item.name, paidAmount: item.remainingPrice });
                         
-                        // Lunas
+                        // Lunas logic
                         item.paidAmount += item.remainingPrice;
                         item.remainingPrice = 0;
                     }
                 });
 
-                // Rekam ke history
-                recordHistoryEvent(person, paidItemsInfo, totalPaidThisTransaction, true);
+                recordHistoryEvent(person, paidItemsInfo, totalPaidThisTransaction, true, 0);
 
-                // Buang item lunas
+                // Buang item
                 person.items = person.items.filter(i => !selectedIds.includes(i.id));
-                selectedCheckboxes[personId] = []; // Clear selection
+                selectedCheckboxes[personId] = [];
                 
                 saveData();
-                showAlert("Berhasil", "Item terpilih telah lunas!");
             }, "Lunaskan", "bg-emerald-500 hover:bg-emerald-600");
         }
 
-        function recordHistoryEvent(person, itemsInfo, totalAmount, isFull = false) {
+        function recordHistoryEvent(person, itemsInfo, totalAmount, isFull = false, changeAmount = 0) {
             const today = new Date();
             appData.history.unshift({
                 id: 'h_' + Date.now().toString(),
@@ -616,33 +643,259 @@
                 time: getCurrentTimeStr(),
                 type: isFull ? 'full' : 'partial',
                 items: itemsInfo,
-                totalAmount: totalAmount
+                totalAmount: totalAmount,
+                changeAmount: changeAmount // Simpan nominal kembalian jika ada
             });
         }
 
+        // WhatsApp Export
         function shareWhatsApp(personId, event) {
             event.stopPropagation();
             const person = appData.active.find(p => p.id === personId);
             if (!person || person.items.length === 0) return;
 
             let totalSisa = 0;
-            let message = `*Rincian Tagihan*\n\n`;
+            let message = ``;
             
             person.items.forEach((item) => {
                 totalSisa += item.remainingPrice;
-                if (item.paidAmount > 0) {
-                    message += `▪ ${item.date} ${item.name}\n  Biaya: ${formatNumber(item.originalPrice)}\n  Dicicil: -${formatNumber(item.paidAmount)}\n  Sisa: *${formatNumber(item.remainingPrice)}*\n`;
+                if (item.paymentHistory && item.paymentHistory.length > 0) {
+                    // Jika pernah dicicil
+                    const historyStr = item.paymentHistory.map(num => formatNumber(num)).join(', ');
+                    message += `▪ ${item.date} ${item.name}\n  Biaya: ${formatNumber(item.originalPrice)}\n  Telah dicicil: ${historyStr}\n  Sisa: *${formatNumber(item.remainingPrice)}*\n\n`;
                 } else {
+                    // Jika belum pernah dicicil (format ringkas)
                     message += `▪ ${item.date} ${item.name} = *${formatNumber(item.originalPrice)}*\n`;
                 }
             });
-            message += `\n*TOTAL TAGIHAN: ${formatNumber(totalSisa)}*`;
+            message += `\n= Total Utang: *${formatNumber(totalSisa)}*`;
 
             const encodedMessage = encodeURIComponent(message);
             const whatsappUrl = person.phone 
                 ? `https://wa.me/${person.phone}?text=${encodedMessage}`
                 : `https://wa.me/?text=${encodedMessage}`;
             window.open(whatsappUrl, '_blank');
+        }
+
+        function renderUI() {
+            let globalDebt = 0;
+            const activeContainer = document.getElementById('activeList');
+            activeContainer.innerHTML = '';
+
+            if (appData.active.length === 0) {
+                activeContainer.innerHTML = `
+                    <div class="flex flex-col items-center justify-center p-10 bg-white dark:bg-slate-800 rounded-2xl border border-dashed border-slate-300 dark:border-slate-700 text-slate-400">
+                        <i class="ph-fill ph-users text-5xl mb-3 text-slate-300 dark:text-slate-600"></i>
+                        <p class="font-medium text-slate-500 dark:text-slate-400">Belum ada daftar teman.</p>
+                    </div>`;
+            } else {
+                appData.active.forEach(person => {
+                    let personTotalDebt = 0;
+                    let personTotalPaid = 0;
+                    let personTotalOriginal = 0;
+                    let activeInstallments = []; // Untuk melacak nama item yang sedang dicicil
+                    
+                    person.items.forEach(i => {
+                        personTotalDebt += i.remainingPrice;
+                        personTotalPaid += i.paidAmount;
+                        personTotalOriginal += i.originalPrice;
+                        
+                        if ((i.paymentHistory && i.paymentHistory.length > 0) && i.remainingPrice > 0) {
+                            activeInstallments.push(i.name);
+                        }
+                    });
+                    
+                    globalDebt += personTotalDebt;
+
+                    const isExpanded = expandedPersonId === person.id;
+                    const selectedIds = selectedCheckboxes[person.id] || [];
+                    let progressPercent = personTotalOriginal > 0 ? (personTotalPaid / personTotalOriginal) * 100 : 0;
+
+                    // Buat teks indikator dicicil untuk bagian luar (Accordion header)
+                    let installmentIndicatorHtml = '';
+                    if (activeInstallments.length > 0 && !isExpanded) {
+                        installmentIndicatorHtml = `
+                            <div class="text-[11px] text-brand-600 dark:text-brand-400 mt-1 flex items-center gap-1 font-medium truncate max-w-[200px]">
+                                <i class="ph-bold ph-arrows-clockwise"></i> Dicicil: ${activeInstallments.join(', ')}
+                            </div>
+                        `;
+                    }
+
+                    // Render Daftar Bon Compact Style (Sesuai Referensi)
+                    let itemsHtml = person.items.length === 0 
+                        ? `<div class="text-center py-5 bg-slate-50 dark:bg-slate-900/50 rounded-xl border border-dashed border-slate-200 dark:border-slate-700 text-slate-400 text-sm italic">Belum ada catatan bon</div>`
+                        : `<div class="space-y-3 mb-4">` + person.items.map(item => {
+                            const isChecked = selectedIds.includes(item.id);
+                            const hasHistory = item.paymentHistory && item.paymentHistory.length > 0;
+                            const historyText = hasHistory ? item.paymentHistory.map(n => formatNumber(n)).join(', ') : '';
+
+                            return `
+                            <div class="flex items-center gap-3 bg-[#1e293b] dark:bg-[#1e293b] text-slate-200 p-4 rounded-xl border border-slate-700 shadow-sm relative overflow-hidden transition-all cursor-pointer" onclick="toggleCheckbox('${person.id}', '${item.id}')">
+                                
+                                <!-- Kiri: Checkbox -->
+                                <div class="flex-shrink-0">
+                                    <input type="checkbox" class="custom-checkbox" ${isChecked ? 'checked' : ''} onclick="event.stopPropagation(); toggleCheckbox('${person.id}', '${item.id}')">
+                                </div>
+                                
+                                <!-- Tengah: Info -->
+                                <div class="flex-1 min-w-0 flex flex-col justify-between h-full">
+                                    <div class="flex items-start justify-between w-full mb-1">
+                                        <h4 class="text-white font-bold text-base truncate capitalize leading-tight">${item.name}</h4>
+                                        <span class="text-xs font-bold text-brand-400 shrink-0 ml-2">${item.date}</span>
+                                    </div>
+                                    
+                                    <div class="flex items-end justify-between w-full mt-1">
+                                        <div class="flex flex-col">
+                                            ${hasHistory ? `
+                                                <span class="text-[11px] text-slate-400 line-through decoration-slate-500 mb-0.5">${formatNumber(item.originalPrice)}</span>
+                                                <span class="text-[10px] text-slate-400 font-light italic mb-0.5 truncate max-w-[150px]">Riwayat cicil: ${historyText}</span>
+                                            ` : ''}
+                                            <span class="font-black text-white text-lg tracking-tight">${formatRupiah(item.remainingPrice)}</span>
+                                        </div>
+                                        
+                                        <!-- Kanan Bawah: Tombol Aksi -->
+                                        <div class="flex gap-2" onclick="event.stopPropagation()">
+                                            <button onclick="triggerPayment('${person.id}', '${item.id}', event)" class="bg-[#334155] hover:bg-[#475569] text-brand-400 h-9 w-9 rounded-lg transition-colors flex items-center justify-center border border-slate-600">
+                                                <i class="ph-bold ph-wallet text-lg"></i>
+                                            </button>
+                                            <button onclick="triggerDeleteItem('${person.id}', '${item.id}', event)" class="bg-[#334155] hover:bg-[#475569] text-red-400 h-9 w-9 rounded-lg transition-colors flex items-center justify-center border border-slate-600">
+                                                <i class="ph-bold ph-trash text-lg"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                        }).join('') + `</div>`;
+
+                    const card = document.createElement('div');
+                    card.className = "bg-white dark:bg-slate-800 rounded-3xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden";
+                    card.innerHTML = `
+                        <!-- Header Accordion -->
+                        <div onclick="toggleAccordion('${person.id}')" class="p-4 relative cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/80 transition-colors select-none">
+                            <div class="flex justify-between items-start z-10 relative">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-brand-100 to-brand-200 dark:from-brand-900 dark:to-slate-700 flex items-center justify-center text-brand-700 dark:text-brand-300 font-extrabold text-xl shadow-inner shrink-0">
+                                        ${person.name.charAt(0).toUpperCase()}
+                                    </div>
+                                    <div class="flex flex-col">
+                                        <h3 class="font-bold text-[17px] text-slate-800 dark:text-slate-100 leading-tight">${person.name}</h3>
+                                        <span class="text-[11px] text-slate-400 mt-0.5 flex items-center gap-1">
+                                            <i class="ph-fill ph-whatsapp-logo text-emerald-500"></i> ${person.phone ? `+${person.phone}` : 'Tanpa No. WA'}
+                                        </span>
+                                        ${installmentIndicatorHtml}
+                                    </div>
+                                </div>
+                                <div class="flex flex-col items-end gap-1">
+                                    <div class="text-right">
+                                        <div class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Sisa</div>
+                                        <div class="font-black text-red-500 dark:text-red-400 text-[15px] tracking-tight">${formatNumber(personTotalDebt)}</div>
+                                    </div>
+                                    <div class="text-slate-300 dark:text-slate-500 transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}">
+                                        <i class="ph-bold ph-caret-down text-lg"></i>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Progress bar -->
+                            ${personTotalOriginal > 0 ? `
+                                <div class="absolute bottom-0 left-0 right-0 h-1 bg-slate-100 dark:bg-slate-700">
+                                    <div class="h-full bg-emerald-500 progress-striped transition-all duration-700" style="width: ${progressPercent}%"></div>
+                                </div>
+                            ` : ''}
+                        </div>
+                        
+                        <!-- Content Accordion -->
+                        <div class="accordion-content ${isExpanded ? 'expanded border-t border-slate-100 dark:border-slate-700 bg-[#0f172a] dark:bg-[#0f172a]' : ''}">
+                            <div class="p-4 pt-5 pb-2">
+                                <div class="flex justify-between items-center mb-4">
+                                    <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Daftar Tagihan</span>
+                                    <button onclick="triggerAddItem('${person.id}', '${person.name}', event)" class="bg-brand-600/20 text-brand-400 hover:bg-brand-600/40 px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1 transition-colors border border-brand-500/30">
+                                        <i class="ph-bold ph-plus"></i> Bon Baru
+                                    </button>
+                                </div>
+                                ${itemsHtml}
+                            </div>
+                            
+                            <div class="p-4 flex gap-2 border-t border-slate-800 bg-[#0f172a] dark:bg-[#0f172a]">
+                                <button onclick="paySelectedItems('${person.id}', event)" ${selectedIds.length === 0 ? 'disabled' : ''} class="flex-1 bg-emerald-900/40 text-emerald-400 border border-emerald-500/30 disabled:opacity-40 disabled:bg-slate-800 disabled:text-slate-500 disabled:border-slate-700 py-3 rounded-xl text-sm font-bold flex flex-col items-center justify-center transition-all">
+                                    <span class="flex items-center gap-1"><i class="ph-bold ph-check-square-offset"></i> Lunas Terpilih</span>
+                                </button>
+                                <button onclick="shareWhatsApp('${person.id}', event)" ${person.items.length === 0 ? 'disabled' : ''} class="w-[30%] bg-[#25D366] hover:bg-[#128C7E] text-white disabled:opacity-40 py-3 rounded-xl text-sm font-bold flex flex-col items-center justify-center transition-all shadow-md">
+                                    <i class="ph-bold ph-whatsapp-logo text-xl"></i>
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                    activeContainer.appendChild(card);
+                });
+            }
+
+            document.getElementById('totalGlobalDebt').innerText = formatRupiah(globalDebt);
+            updateHistoryFilters();
+        }
+
+        function updateHistoryFilters() {
+            const filter = document.getElementById('historyFilter');
+            const currentVal = filter.value;
+            filter.innerHTML = `<option value="all">Semua Riwayat Transaksi</option>`;
+            
+            const uniqueNames = [...new Set(appData.history.map(item => item.personName))];
+            uniqueNames.forEach(name => {
+                filter.innerHTML += `<option value="${name}">${name}</option>`;
+            });
+            if(uniqueNames.includes(currentVal)) filter.value = currentVal;
+        }
+
+        function renderHistory() {
+            const filterVal = document.getElementById('historyFilter').value;
+            const container = document.getElementById('historyList');
+            container.innerHTML = '';
+            
+            let filtered = appData.history;
+            if (filterVal !== 'all') {
+                filtered = appData.history.filter(h => h.personName === filterVal);
+            }
+
+            if (filtered.length === 0) {
+                container.innerHTML = `<div class="text-center p-6 text-slate-400 italic text-sm border border-dashed border-slate-300 dark:border-slate-700 rounded-2xl">Belum ada riwayat transaksi.</div>`;
+                return;
+            }
+
+            filtered.forEach(history => {
+                const isFull = history.type === 'full';
+                const itemsDesc = history.items.map(i => `${i.name} (${formatNumber(i.paidAmount)})`).join(', ');
+                
+                // Indikator Kembalian jika ada
+                const changeHtml = history.changeAmount > 0 
+                    ? `<div class="mt-1 text-[10px] font-bold text-orange-500 bg-orange-50 dark:bg-orange-900/30 px-2 py-1 rounded inline-block">Ada Kembalian: ${formatRupiah(history.changeAmount)}</div>`
+                    : '';
+
+                container.innerHTML += `
+                    <div class="bg-white dark:bg-slate-800 rounded-2xl p-4 border-l-4 ${isFull ? 'border-emerald-500' : 'border-brand-500'} shadow-sm opacity-95">
+                        <div class="flex justify-between items-start mb-2">
+                            <div class="font-bold text-slate-700 dark:text-slate-200 flex items-center gap-2">
+                                ${isFull ? '<i class="ph-fill ph-check-circle text-emerald-500 text-lg"></i>' : '<i class="ph-fill ph-clock-counter-clockwise text-brand-500 text-lg"></i>'}
+                                <span>${history.personName} <span class="text-[10px] font-normal text-slate-400 bg-slate-100 dark:bg-slate-700 px-1.5 py-0.5 rounded ml-1">${isFull ? 'Lunas' : 'Cicilan'}</span></span>
+                            </div>
+                            <div class="text-right">
+                                <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">${history.date}</div>
+                                <div class="text-xs text-slate-500">${history.time}</div>
+                            </div>
+                        </div>
+                        <div class="text-xs text-slate-500 dark:text-slate-400 mb-2 leading-relaxed border-b border-slate-100 dark:border-slate-700 pb-2">
+                            ${itemsDesc}
+                        </div>
+                        <div class="flex justify-between items-end">
+                            <div class="flex flex-col">
+                                <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Uang Diterima</span>
+                                ${changeHtml}
+                            </div>
+                            <span class="font-black text-emerald-600 dark:text-emerald-400 text-lg tracking-tight">+ ${formatRupiah(history.totalAmount)}</span>
+                        </div>
+                    </div>
+                `;
+            });
         }
 
         function exportData() {
@@ -684,205 +937,6 @@
             }, "Hapus Semua", "bg-red-500 hover:bg-red-600");
         }
 
-        function renderUI() {
-            let globalDebt = 0;
-            let globalPaid = 0; // Total uang diterima dari Cicilan aktif ATAU History
-
-            appData.history.forEach(h => globalPaid += h.totalAmount);
-
-            const activeContainer = document.getElementById('activeList');
-            activeContainer.innerHTML = '';
-
-            if (appData.active.length === 0) {
-                activeContainer.innerHTML = `
-                    <div class="flex flex-col items-center justify-center p-10 bg-white dark:bg-slate-800 rounded-2xl border border-dashed border-slate-300 dark:border-slate-700 text-slate-400">
-                        <i class="ph-fill ph-users text-5xl mb-3 text-slate-300 dark:text-slate-600"></i>
-                        <p class="font-medium text-slate-500 dark:text-slate-400">Belum ada daftar teman.</p>
-                        <p class="text-xs text-center mt-1">Gunakan tombol + di pojok kanan bawah.</p>
-                    </div>`;
-            } else {
-                appData.active.forEach(person => {
-                    let personTotalDebt = 0;
-                    let personTotalPaid = 0;
-                    let personTotalOriginal = 0;
-                    
-                    person.items.forEach(i => {
-                        personTotalDebt += i.remainingPrice;
-                        personTotalPaid += i.paidAmount;
-                        personTotalOriginal += i.originalPrice;
-                    });
-                    
-                    globalDebt += personTotalDebt;
-                    globalPaid += personTotalPaid; // Tambahkan cicilan aktif ke Uang Masuk
-
-                    const isExpanded = expandedPersonId === person.id;
-                    const selectedIds = selectedCheckboxes[person.id] || [];
-                    
-                    let progressPercent = personTotalOriginal > 0 ? (personTotalPaid / personTotalOriginal) * 100 : 0;
-
-                    let itemsHtml = person.items.length === 0 
-                        ? `<div class="text-center py-5 bg-slate-50 dark:bg-slate-900/50 rounded-xl border border-dashed border-slate-200 dark:border-slate-700 text-slate-400 text-sm italic">Belum ada catatan bon</div>`
-                        : `<div class="space-y-2.5 mb-4">` + person.items.map(item => {
-                            const isChecked = selectedIds.includes(item.id);
-                            const hasPaidPartial = item.paidAmount > 0;
-                            return `
-                            <div class="flex items-center gap-3 bg-white dark:bg-slate-800 p-3 rounded-xl border ${isChecked ? 'border-brand-500 bg-brand-50/30 dark:bg-brand-900/10 shadow-sm' : 'border-slate-100 dark:border-slate-700'} shadow-sm relative overflow-hidden transition-all" onclick="toggleCheckbox('${person.id}', '${item.id}')">
-                                <!-- Checkbox area -->
-                                <div class="flex-shrink-0 pt-1">
-                                    <input type="checkbox" class="custom-checkbox" ${isChecked ? 'checked' : ''} onclick="event.stopPropagation(); toggleCheckbox('${person.id}', '${item.id}')">
-                                </div>
-                                <!-- Content -->
-                                <div class="flex-1 min-w-0 flex flex-col justify-center">
-                                    <div class="flex items-baseline justify-between mb-0.5 gap-2">
-                                        <h4 class="text-slate-800 dark:text-slate-200 font-bold text-sm truncate capitalize">${item.name}</h4>
-                                        <span class="text-[11px] font-bold text-brand-500 dark:text-brand-400 shrink-0 whitespace-nowrap">${item.date}</span>
-                                    </div>
-                                    <div class="flex items-center justify-between">
-                                        <div class="flex flex-col">
-                                            ${hasPaidPartial ? `<span class="text-[10px] text-slate-400 line-through -mb-1">${formatNumber(item.originalPrice)}</span>` : ''}
-                                            <span class="font-black text-slate-700 dark:text-slate-300 text-sm tracking-tight">${formatRupiah(item.remainingPrice)}</span>
-                                        </div>
-                                        <div class="flex gap-2 relative z-10" onclick="event.stopPropagation()">
-                                            <button onclick="triggerPayment('${person.id}', '${item.id}', event)" class="bg-brand-100 dark:bg-slate-700 hover:bg-brand-200 text-brand-700 dark:text-brand-300 p-2 rounded-lg transition-colors flex items-center justify-center shadow-sm">
-                                                <i class="ph-bold ph-wallet text-sm"></i>
-                                            </button>
-                                            <button onclick="triggerDeleteItem('${person.id}', '${item.id}', event)" class="bg-red-50 dark:bg-slate-700 hover:bg-red-100 text-red-500 p-2 rounded-lg transition-colors flex items-center justify-center shadow-sm">
-                                                <i class="ph-bold ph-trash text-sm"></i>
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        `;
-                        }).join('') + `</div>`;
-
-                    const card = document.createElement('div');
-                    card.className = "bg-white dark:bg-slate-800 rounded-3xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden";
-                    card.innerHTML = `
-                        <!-- Header Accordion -->
-                        <div onclick="toggleAccordion('${person.id}')" class="p-4 relative cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/80 transition-colors select-none">
-                            <div class="flex justify-between items-center z-10 relative">
-                                <div class="flex items-center gap-3">
-                                    <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-brand-100 to-brand-200 dark:from-brand-900 dark:to-slate-800 flex items-center justify-center text-brand-700 dark:text-brand-300 font-extrabold text-xl shadow-inner">
-                                        ${person.name.charAt(0).toUpperCase()}
-                                    </div>
-                                    <div class="flex flex-col">
-                                        <h3 class="font-bold text-[17px] text-slate-800 dark:text-slate-100 leading-tight">${person.name}</h3>
-                                        <span class="text-[11px] text-slate-400 mt-0.5 flex items-center gap-1">
-                                            <i class="ph-fill ph-whatsapp-logo text-emerald-500"></i> ${person.phone ? `+${person.phone}` : 'Tanpa No. WA'}
-                                        </span>
-                                    </div>
-                                </div>
-                                <div class="flex items-center gap-3">
-                                    <div class="text-right">
-                                        <div class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Sisa</div>
-                                        <div class="font-black text-red-500 dark:text-red-400 text-[15px] tracking-tight">${formatNumber(personTotalDebt)}</div>
-                                    </div>
-                                    <div class="text-slate-300 dark:text-slate-500 transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}">
-                                        <i class="ph-bold ph-caret-down text-xl"></i>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <!-- Progress bar -->
-                            ${personTotalOriginal > 0 ? `
-                                <div class="absolute bottom-0 left-0 right-0 h-1 bg-slate-100 dark:bg-slate-700">
-                                    <div class="h-full bg-emerald-500 progress-striped transition-all duration-700" style="width: ${progressPercent}%"></div>
-                                </div>
-                            ` : ''}
-                        </div>
-                        
-                        <!-- Content -->
-                        <div class="accordion-content ${isExpanded ? 'expanded border-t border-slate-100 dark:border-slate-700 bg-slate-50/30 dark:bg-slate-900/30' : ''}">
-                            <div class="p-4 pt-5 pb-2">
-                                <div class="flex justify-between items-center mb-3">
-                                    <span class="text-xs font-bold text-slate-500 uppercase tracking-wider">Daftar Tagihan</span>
-                                    <button onclick="triggerAddItem('${person.id}', '${person.name}', event)" class="bg-brand-100 text-brand-700 dark:bg-brand-900/40 dark:text-brand-300 hover:bg-brand-200 px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1 transition-colors">
-                                        <i class="ph-bold ph-plus"></i> Bon Baru
-                                    </button>
-                                </div>
-                                ${itemsHtml}
-                            </div>
-                            
-                            <div class="p-4 flex gap-2 border-t border-slate-100 dark:border-slate-700/50 bg-white dark:bg-slate-800">
-                                <button onclick="paySelectedItems('${person.id}', event)" ${selectedIds.length === 0 ? 'disabled' : ''} class="flex-1 bg-emerald-50 text-emerald-600 dark:bg-emerald-900/20 dark:text-emerald-500 border border-emerald-200 dark:border-emerald-800/50 disabled:opacity-40 disabled:bg-slate-50 disabled:text-slate-400 disabled:border-slate-200 py-3 rounded-xl text-sm font-bold flex flex-col items-center justify-center transition-all">
-                                    <span class="flex items-center gap-1"><i class="ph-bold ph-check-square-offset"></i> Lunas Terpilih</span>
-                                    <span class="text-[9px] mt-0.5 opacity-70 font-medium">${selectedIds.length > 0 ? selectedIds.length + ' item' : 'Centang item di atas'}</span>
-                                </button>
-                                <button onclick="shareWhatsApp('${person.id}', event)" ${person.items.length === 0 ? 'disabled' : ''} class="w-[30%] bg-[#25D366] hover:bg-[#128C7E] text-white disabled:opacity-40 py-3 rounded-xl text-sm font-bold flex flex-col items-center justify-center transition-all shadow-md">
-                                    <i class="ph-bold ph-whatsapp-logo text-xl"></i>
-                                    <span class="text-[9px] mt-0.5">Kirim WA</span>
-                                </button>
-                                <button onclick="triggerDeletePerson('${person.id}')" class="w-12 bg-red-50 dark:bg-red-900/20 text-red-500 hover:bg-red-100 flex items-center justify-center rounded-xl transition-all">
-                                    <i class="ph-bold ph-trash text-lg"></i>
-                                </button>
-                            </div>
-                        </div>
-                    `;
-                    activeContainer.appendChild(card);
-                });
-            }
-
-            document.getElementById('totalGlobalDebt').innerText = formatRupiah(globalDebt);
-            document.getElementById('totalGlobalPaid').innerText = formatRupiah(globalPaid);
-            updateHistoryFilters();
-        }
-
-        function updateHistoryFilters() {
-            const filter = document.getElementById('historyFilter');
-            const currentVal = filter.value;
-            filter.innerHTML = `<option value="all">Semua Riwayat Lunas & Cicilan</option>`;
-            
-            const uniqueNames = [...new Set(appData.history.map(item => item.personName))];
-            uniqueNames.forEach(name => {
-                filter.innerHTML += `<option value="${name}">${name}</option>`;
-            });
-            if(uniqueNames.includes(currentVal)) filter.value = currentVal;
-        }
-
-        function renderHistory() {
-            const filterVal = document.getElementById('historyFilter').value;
-            const container = document.getElementById('historyList');
-            container.innerHTML = '';
-            
-            let filtered = appData.history;
-            if (filterVal !== 'all') {
-                filtered = appData.history.filter(h => h.personName === filterVal);
-            }
-
-            if (filtered.length === 0) {
-                container.innerHTML = `<div class="text-center p-6 text-slate-400 italic text-sm border border-dashed border-slate-300 dark:border-slate-700 rounded-2xl">Belum ada riwayat transaksi.</div>`;
-                return;
-            }
-
-            filtered.forEach(history => {
-                const isFull = history.type === 'full';
-                const itemsDesc = history.items.map(i => `${i.name} (${formatNumber(i.paidAmount)})`).join(', ');
-
-                container.innerHTML += `
-                    <div class="bg-white dark:bg-slate-800 rounded-2xl p-4 border-l-4 ${isFull ? 'border-emerald-500' : 'border-brand-500'} shadow-sm opacity-95">
-                        <div class="flex justify-between items-start mb-2">
-                            <div class="font-bold text-slate-700 dark:text-slate-200 flex items-center gap-2">
-                                ${isFull ? '<i class="ph-fill ph-check-circle text-emerald-500 text-lg"></i>' : '<i class="ph-fill ph-clock-counter-clockwise text-brand-500 text-lg"></i>'}
-                                <span>${history.personName} <span class="text-[10px] font-normal text-slate-400 bg-slate-100 dark:bg-slate-700 px-1.5 py-0.5 rounded ml-1">${isFull ? 'Lunas' : 'Cicilan'}</span></span>
-                            </div>
-                            <div class="text-right">
-                                <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">${history.date}</div>
-                                <div class="text-xs text-slate-500">${history.time}</div>
-                            </div>
-                        </div>
-                        <div class="text-xs text-slate-500 dark:text-slate-400 mb-3 leading-relaxed border-b border-slate-100 dark:border-slate-700 pb-2">
-                            ${itemsDesc}
-                        </div>
-                        <div class="flex justify-between items-center">
-                            <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Nilai Transaksi</span>
-                            <span class="font-black text-emerald-600 dark:text-emerald-400 text-lg tracking-tight">+ ${formatRupiah(history.totalAmount)}</span>
-                        </div>
-                    </div>
-                `;
-            });
-        }
-
         function toggleTheme() {
             document.documentElement.classList.toggle('dark');
             const isDark = document.documentElement.classList.contains('dark');
@@ -895,10 +949,10 @@
             const metaTheme = document.getElementById('themeColorMeta');
             if(isDark) {
                 icon.classList.replace('ph-moon', 'ph-sun');
-                metaTheme.setAttribute('content', '#1e293b'); // slate-800
+                metaTheme.setAttribute('content', '#1e293b'); 
             } else {
                 icon.classList.replace('ph-sun', 'ph-moon');
-                metaTheme.setAttribute('content', '#1e3a8a'); // brand-900
+                metaTheme.setAttribute('content', '#1e3a8a'); 
             }
         }
 
