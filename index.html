@@ -1310,10 +1310,23 @@
                 try {
                     const reqBody = {
                         contents: [{ parts: [
-                            { text: "Ekstrak semua nama barang dan harga dari struk ini. Output HARUS berupa JSON array of objects dengan struktur [{ \"name\": \"nama barang\", \"price\": 10000 }]. Abaikan pajak, diskon, dan total akhir. Pastikan output hanya berupa teks JSON valid yang bisa langsung di-parse." },
+                            { text: "Ekstrak nama barang dan harga dari struk ini. Abaikan pajak, diskon, dan total." },
                             { inline_data: { mime_type: file.type, data: base64Data } }
                         ]}],
-                        generationConfig: { response_mime_type: "application/json" }
+                        generationConfig: { 
+                            response_mime_type: "application/json",
+                            response_schema: {
+                                type: "ARRAY",
+                                items: {
+                                    type: "OBJECT",
+                                    properties: {
+                                        name: { type: "STRING" },
+                                        price: { type: "INTEGER" }
+                                    },
+                                    required: ["name", "price"]
+                                }
+                            }
+                        }
                     };
                     
                     const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${settings.aiModel}:generateContent?key=${settings.apiKey}`, {
@@ -1330,7 +1343,17 @@
                     if(!data.candidates || data.candidates.length === 0) throw new Error("Respons AI kosong (mungkin terblokir filter keamanan).");
                     
                     let text = data.candidates[0].content.parts[0].text;
-                    const parsed = JSON.parse(text);
+                    
+                    // Bersihkan karakter markdown JSON jika AI membandel
+                    text = text.replace(/```json/gi, '').replace(/```/g, '').trim();
+                    
+                    let parsed;
+                    try {
+                        parsed = JSON.parse(text);
+                    } catch (e) {
+                        // Jika JSON AI benar-benar rusak, tangkap dan tampilkan isi teksnya
+                        throw new Error("Format data dari AI rusak. Teks asli: " + text.substring(0, 50) + "...");
+                    }
                     
                     if(Array.isArray(parsed) && parsed.length > 0) {
                         parsed.forEach(i => { if(i.name && i.price != null) splitItems.push({ id: Date.now()+Math.random(), name: i.name, price: Number(i.price), assignedTo: [] }); });
