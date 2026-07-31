@@ -354,7 +354,7 @@
     </div>
 
     <!-- UI: Split Bill Full View -->
-    <div id="splitBillView" class="fixed inset-0 bg-slate-100 dark:bg-slate-900 z-[60] flex flex-col slide-up-view">
+    <div id="splitBillView" class="fixed inset-0 bg-slate-100 dark:bg-slate-900 z-[60] flex flex-col slide-up-view sm:max-w-md sm:mx-auto sm:border-x sm:border-slate-200 dark:sm:border-slate-700">
         <header class="bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 p-4 flex items-center justify-between shrink-0">
             <button onclick="closeSplitBill()" class="p-2 -ml-2 rounded-lg text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700">
                 <i class="ph-bold ph-x text-xl"></i>
@@ -938,14 +938,34 @@
         // --- Render UI ---
         function calculatePersonDebt(person) { return person.items.reduce((total, i) => total + i.remainingPrice, 0); }
 
+        function updateHeader() {
+            const titleEl = document.getElementById('headerTitle');
+            const amountEl = document.getElementById('totalGlobalDebt');
+            
+            if (currentTab === 'ngutangin') {
+                titleEl.innerText = 'TOTAL NGUTANGIN';
+                const total = appData.ngutangin.reduce((sum, p) => sum + calculatePersonDebt(p), 0);
+                amountEl.innerText = settings.privacyMode ? "Rp •••••" : formatRupiah(total);
+                amountEl.style.display = 'block';
+            } else if (currentTab === 'utangSaya') {
+                titleEl.innerText = 'TOTAL UTANG SAYA';
+                const total = appData.utangSaya.reduce((sum, p) => sum + calculatePersonDebt(p), 0);
+                amountEl.innerText = settings.privacyMode ? "Rp •••••" : formatRupiah(total);
+                amountEl.style.display = 'block';
+            } else if (currentTab === 'history') {
+                titleEl.innerText = 'TOTAL TRANSAKSI';
+                const total = appData.history.reduce((sum, h) => sum + h.totalAmount, 0);
+                amountEl.innerText = settings.privacyMode ? "Rp •••••" : formatRupiah(total);
+                amountEl.style.display = 'block';
+            } else if (currentTab === 'tool') {
+                titleEl.innerText = 'ALAT BANTU';
+                amountEl.style.display = 'none';
+            }
+        }
+
         function renderUI() {
-            let globalDebt = 0;
             const container = document.getElementById('mainList');
             container.innerHTML = '';
-            
-            if (document.getElementById('totalGlobalDebt')) {
-                document.getElementById('totalGlobalDebt').innerText = settings.privacyMode ? "Rp •••••" : formatRupiah(globalDebt);
-            }
 
             let listToRender = [...getCurrentList()];
             const query = document.getElementById('searchInput').value.toLowerCase().trim();
@@ -966,7 +986,6 @@
                         personTotalDebt += i.remainingPrice; personTotalPaid += i.paidAmount; personTotalOriginal += i.originalPrice;
                         if ((i.paymentHistory && i.paymentHistory.length > 0) && i.remainingPrice > 0) activeInstallments.push(i.name);
                     });
-                    globalDebt += personTotalDebt;
                     
                     const isExpanded = expandedPersonId === person.id;
                     const selectedIds = selectedCheckboxes[person.id] || [];
@@ -1049,8 +1068,8 @@
                     container.appendChild(card);
                 });
             }
-            if(document.getElementById('totalGlobalDebt')) document.getElementById('totalGlobalDebt').innerText = settings.privacyMode ? "Rp •••••" : formatRupiah(globalDebt);
             updateHistoryFilters();
+            updateHeader();
         }
 
         // --- History ---
@@ -1098,6 +1117,7 @@
                         </div>
                     </div>`;
             });
+            updateHeader();
         }
 
         function clearHistory() {
@@ -1140,7 +1160,10 @@
             const icon = document.getElementById('privacyIcon');
             if(settings.privacyMode) { document.body.classList.add('privacy-on'); icon.classList.replace('ph-eye', 'ph-eye-closed'); } 
             else { document.body.classList.remove('privacy-on'); icon.classList.replace('ph-eye-closed', 'ph-eye'); }
-            renderUI();
+            
+            if (currentTab === 'ngutangin' || currentTab === 'utangSaya') { renderUI(); }
+            else if (currentTab === 'history') { renderHistory(); }
+            else { updateHeader(); }
         }
 
         // --- STREAMING_CHUNK:PIN Lock System ---
@@ -1284,54 +1307,78 @@
             reader.onloadend = async () => {
                 const base64Data = reader.result.split(',')[1];
                 try {
+                    const reqBody = {
+                        contents: [{ parts: [
+                            { text: "Ekstrak semua nama barang dan harga dari struk ini. Output HARUS berupa JSON array of objects dengan struktur [{ \"name\": \"nama barang\", \"price\": 10000 }]. Abaikan pajak, diskon, dan total akhir. Pastikan output hanya berupa teks JSON valid yang bisa langsung di-parse." },
+                            { inline_data: { mime_type: file.type, data: base64Data } }
+                        ]}],
+                        generationConfig: { response_mime_type: "application/json" }
+                    };
+                    
                     const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${settings.aiModel}:generateContent?key=${settings.apiKey}`, {
                         method: 'POST', headers: {'Content-Type': 'application/json'},
-                        body: JSON.stringify({
-                            contents: [{ parts: [
-                                { text: "Ekstrak item dari struk ini. Kembalikan HANYA array JSON murni berisikan objek dengan key 'name' (string) dan 'price' (number). Jangan pakai pajak/total. Jangan sertakan markdown atau backticks ```json." },
-                                { inline_data: { mime_type: file.type, data: base64Data } }
-                            ]}]
-                        })
+                        body: JSON.stringify(reqBody)
                     });
-                    const data = await res.json();
-                    let text = data.candidates[0].content.parts[0].text;
-                    text = text.replace(/```json/gi, '').replace(/```/g, '').trim();
-                    const parsed = JSON.parse(text);
-                    if(Array.isArray(parsed)) {
-                        parsed.forEach(i => { if(i.name && i.price) splitItems.push({ id: Date.now()+Math.random(), name: i.name, price: Number(i.price), assignedTo: [] }); });
-                        renderSplitBillUI();
+                    
+                    if (!res.ok) {
+                        const errData = await res.json();
+                        throw new Error(errData.error?.message || `HTTP Error ${res.status}`);
                     }
-                } catch (err) { showAlert("AI Error", "Gagal membaca struk. Pastikan struk jelas atau ganti Model AI di pengaturan."); }
-                document.getElementById('aiLoading').classList.add('hidden');
+                    
+                    const data = await res.json();
+                    if(!data.candidates || data.candidates.length === 0) throw new Error("Respons AI kosong (mungkin terblokir filter keamanan).");
+                    
+                    let text = data.candidates[0].content.parts[0].text;
+                    const parsed = JSON.parse(text);
+                    
+                    if(Array.isArray(parsed) && parsed.length > 0) {
+                        parsed.forEach(i => { if(i.name && i.price != null) splitItems.push({ id: Date.now()+Math.random(), name: i.name, price: Number(i.price), assignedTo: [] }); });
+                        renderSplitBillUI();
+                    } else {
+                        throw new Error("Struk tidak terdeteksi atau format data dari AI salah.");
+                    }
+                } catch (err) { 
+                    showAlert("AI Error", `Gagal membaca struk.<br><br><div class="text-xs text-red-500 font-mono text-left block mt-3 p-3 bg-red-50 dark:bg-red-900/30 rounded-lg border border-red-100 dark:border-red-800 break-words max-h-32 overflow-y-auto">${err.message}</div>`); 
+                } finally {
+                    document.getElementById('aiLoading').classList.add('hidden');
+                }
             };
             reader.readAsDataURL(file);
         }
 
         // --- Assign People Flow ---
-        function openAssignSheet(itemId) {
-            activeSplitItemId = itemId;
-            const item = splitItems.find(i => i.id === itemId);
-            document.getElementById('assignItemName').innerText = `${item.name} - Rp ${formatNumber(item.price)}`;
+        function switchTab(tab) {
+            currentTab = tab;
+            settings.lastTab = tab;
+            saveSettings();
             
-            let allNames = [...new Set(appData.ngutangin.map(p => p.name))];
-            tempSplitPeople.forEach(n => { if(!allNames.includes(n)) allNames.push(n); });
-            
-            const list = document.getElementById('assignPeopleList');
-            list.innerHTML = allNames.map(name => `
-                <label class="flex items-center gap-3 p-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl cursor-pointer hover:bg-slate-100">
-                    <input type="checkbox" value="${name}" class="custom-checkbox assign-cb" ${item.assignedTo.includes(name) ? 'checked' : ''}>
-                    <span class="font-bold text-slate-700 dark:text-slate-200">${name}</span>
-                </label>
-            `).join('');
-            
-            document.getElementById('assignNewName').value = '';
-            openSheet('assignSplitSheet');
-        }
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            document.querySelectorAll('button[id^="tabBtn-"]').forEach(btn => {
+                btn.className = "px-4 py-2 text-[11px] sm:text-sm font-bold rounded-lg transition-all text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200";
+            });
 
-        function addTempPersonSplit() {
-            const name = document.getElementById('assignNewName').value.trim();
-            if(name && !tempSplitPeople.includes(name) && !appData.ngutangin.find(p=>p.name===name)) {
-                tempSplitPeople.push(name); openAssignSheet(activeSplitItemId); // refresh list
+            const activeBtnClass = "px-4 py-2 text-[11px] sm:text-sm font-bold rounded-lg transition-all bg-white dark:bg-slate-700 shadow-sm text-brand-700 dark:text-blue-300";
+            const btn = document.getElementById(`tabBtn-${tab}`);
+            if(btn) btn.className = tab === 'tool' ? activeBtnClass + " flex items-center gap-1" : activeBtnClass;
+
+            const fab = document.getElementById('mainFabBtn');
+            const searchSort = document.getElementById('searchSortArea');
+
+            if (tab === 'ngutangin' || tab === 'utangSaya') {
+                document.getElementById('tab-main').classList.add('active');
+                fab.classList.remove('hidden');
+                searchSort.classList.remove('hidden');
+                renderUI();
+            } else if (tab === 'history') {
+                document.getElementById('tab-history').classList.add('active');
+                fab.classList.add('hidden');
+                searchSort.classList.add('hidden');
+                renderHistory();
+            } else if (tab === 'tool') {
+                document.getElementById('tab-tool').classList.add('active');
+                fab.classList.add('hidden');
+                searchSort.classList.add('hidden');
+                updateHeader();
             }
         }
 
