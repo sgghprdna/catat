@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="theme-color" content="#2563eb" id="themeColorMeta">
-    <title>Ngutang Pro</title>
+    <title>Ngutang</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -25,138 +25,145 @@
             document.documentElement.classList.remove('dark');
         }
     </script>
+    <!-- Ikon & Confetti -->
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     
     <style>
         input[type="text"], input[type="number"], input[type="tel"], input[type="date"] { font-size: 16px; }
         * { -webkit-tap-highlight-color: transparent; }
         
-        /* Accordion transition */
         .accordion-content {
             transition: max-height 0.4s ease-in-out, opacity 0.3s ease-in-out;
             max-height: 0;
             opacity: 0;
             overflow: hidden;
         }
-        .accordion-content.expanded {
-            max-height: 2500px; 
-            opacity: 1;
-        }
-
-        /* Tabs */
+        .accordion-content.expanded { max-height: 3500px; opacity: 1; }
         .tab-content { display: none; animation: fadeIn 0.3s ease; }
         .tab-content.active { display: block; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* Bottom Sheet Transitions */
         .bottom-sheet-overlay { transition: opacity 0.3s ease; }
         .bottom-sheet-content { transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1); }
         .hidden-sheet { pointer-events: none; }
         .hidden-sheet .bottom-sheet-overlay { opacity: 0; }
         .hidden-sheet .bottom-sheet-content { transform: translateY(100%); }
 
-        /* Custom Checkbox */
         .custom-checkbox {
-            appearance: none;
-            width: 24px; height: 24px;
-            border-radius: 6px;
-            border: 2px solid #cbd5e1;
+            appearance: none; width: 24px; height: 24px; border-radius: 6px;
             display: inline-flex; align-items: center; justify-content: center;
             cursor: pointer; transition: all 0.2s;
-            background-color: transparent;
         }
-        .dark .custom-checkbox { border-color: #475569; }
         .custom-checkbox:checked { background-color: #2563eb; border-color: #2563eb; }
-        .custom-checkbox:checked::after {
-            content: '✓'; color: white; font-weight: bold; font-size: 14px;
-        }
+        .custom-checkbox:checked::after { content: '✓'; color: white; font-weight: bold; font-size: 14px; }
         
-        /* Progress Bar Striping */
         .progress-striped {
             background-image: linear-gradient(45deg, rgba(255,255,255,.15) 25%, transparent 25%, transparent 50%, rgba(255,255,255,.15) 50%, rgba(255,255,255,.15) 75%, transparent 75%, transparent);
             background-size: 1rem 1rem;
         }
+
+        /* Shrink Header Effect */
+        .header-transition { transition: all 0.3s ease; }
+        .header-shrink { padding-top: 1rem !important; padding-bottom: 0.75rem !important; }
+        .header-shrink .header-title-area { margin-bottom: 0 !important; }
+        .header-shrink .header-logo { width: 32px; height: 32px; padding: 4px; }
+        .header-shrink .header-logo i { font-size: 1.25rem; }
+        .header-shrink h1 { font-size: 1.125rem; }
+        .header-shrink .header-amount { font-size: 1.5rem; line-height: 1.2; margin-top: 0.25rem; }
     </style>
 </head>
 <body class="bg-slate-100 dark:bg-slate-900 text-slate-800 dark:text-slate-100 font-sans pb-28 min-h-screen relative transition-colors duration-300">
 
-    <header class="bg-gradient-to-br from-brand-600 to-brand-900 dark:from-slate-800 dark:to-slate-950 text-white pt-8 pb-6 px-5 shadow-lg rounded-b-3xl sticky top-0 z-20">
+    <!-- Header -->
+    <header id="mainHeader" class="header-transition bg-gradient-to-br from-brand-600 to-brand-900 dark:from-slate-800 dark:to-slate-950 text-white pt-8 pb-6 px-5 shadow-lg rounded-b-3xl sticky top-0 z-20 transition-colors duration-300">
         <div class="max-w-md mx-auto">
-            <div class="flex justify-between items-start mb-4">
+            <div class="header-title-area flex justify-between items-start mb-4 transition-all">
                 <div class="flex items-center gap-3">
-                    <div class="bg-white/20 p-2 rounded-xl backdrop-blur-sm shadow-inner">
+                    <div class="header-logo bg-white/20 p-2 rounded-xl backdrop-blur-sm shadow-inner transition-all">
                         <i class="ph ph-wallet text-2xl text-white"></i>
                     </div>
-                    <div>
-                        <h1 class="text-xl font-bold tracking-tight">Ngutang Pro</h1>
-                    </div>
+                    <div><h1 class="text-xl font-bold tracking-tight transition-all">Ngutang</h1></div>
                 </div>
                 <div class="flex items-center gap-1">
                     <button onclick="toggleTheme()" class="p-2 hover:bg-white/10 rounded-lg transition-colors">
-                        <i id="themeIcon" class="ph-fill ph-moon text-2xl"></i>
+                        <i id="themeIcon" class="ph-fill ph-moon text-xl sm:text-2xl"></i>
                     </button>
                     <button onclick="openSheet('settingsSheet')" class="p-2 hover:bg-white/10 rounded-lg transition-colors">
-                        <i class="ph ph-dots-three-outline-vertical text-2xl"></i>
+                        <i class="ph ph-dots-three-outline-vertical text-xl sm:text-2xl"></i>
                     </button>
                 </div>
             </div>
             
-            <div class="mt-4">
-                <p class="text-blue-100 dark:text-slate-300 text-[11px] font-semibold mb-1 uppercase tracking-wider">Total Utang (Sisa)</p>
-                <h2 id="totalGlobalDebt" class="text-3xl font-extrabold tracking-tight truncate">Rp 0</h2>
+            <div class="mt-2 transition-all">
+                <p id="headerTitle" class="text-blue-100 dark:text-slate-400 text-[10px] font-semibold mb-0.5 uppercase tracking-wider">TOTAL NGUTANGIN</p>
+                <h2 id="totalGlobalDebt" class="header-amount text-3xl font-extrabold tracking-tight truncate transition-all">Rp 0</h2>
             </div>
         </div>
     </header>
 
-    <div class="max-w-md mx-auto px-4 mt-6 mb-4">
-        <div class="flex bg-slate-200/70 dark:bg-slate-800 p-1.5 rounded-xl shadow-inner">
-            <button onclick="switchTab('active')" id="tabBtn-active" class="flex-1 py-2.5 text-sm font-bold rounded-lg bg-white dark:bg-slate-700 shadow-sm text-brand-700 dark:text-blue-300 transition-all">
-                Aktif
-            </button>
-            <button onclick="switchTab('history')" id="tabBtn-history" class="flex-1 py-2.5 text-sm font-medium rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition-all">
-                Riwayat
-            </button>
+    <!-- Tabs 3 Pilihan -->
+    <div class="max-w-md mx-auto px-4 mt-6 mb-3">
+        <div class="flex bg-slate-200/70 dark:bg-slate-800 p-1.5 rounded-xl shadow-inner transition-colors duration-300">
+            <button onclick="switchTab('ngutangin')" id="tabBtn-ngutangin" class="flex-1 py-2 text-[11px] sm:text-sm font-bold rounded-lg bg-white dark:bg-slate-700 shadow-sm text-brand-700 dark:text-blue-300 transition-all">Ngutangin</button>
+            <button onclick="switchTab('utangSaya')" id="tabBtn-utangSaya" class="flex-1 py-2 text-[11px] sm:text-sm font-medium rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition-all">Utang Saya</button>
+            <button onclick="switchTab('history')" id="tabBtn-history" class="flex-1 py-2 text-[11px] sm:text-sm font-medium rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition-all">Riwayat</button>
         </div>
     </div>
 
+    <!-- Area Pencarian & Filter (Hanya tampil di Ngutangin & Utang Saya) -->
+    <div id="searchSortArea" class="max-w-md mx-auto px-4 mb-5 flex gap-2">
+        <div class="relative flex-1">
+            <span class="absolute left-3 top-2.5 text-slate-400"><i class="ph-bold ph-magnifying-glass"></i></span>
+            <input type="text" id="searchInput" oninput="renderUI()" placeholder="Cari nama..." class="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl pl-9 pr-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 text-slate-800 dark:text-slate-100 transition-colors shadow-sm" autocomplete="off">
+        </div>
+        <select id="sortSelect" onchange="renderUI()" class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-2 py-2.5 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-brand-500 text-slate-700 dark:text-slate-200 shadow-sm outline-none">
+            <option value="newest">Terbaru</option>
+            <option value="largest">Terbesar</option>
+            <option value="az">A - Z</option>
+        </select>
+    </div>
+
     <main class="max-w-md mx-auto px-4 space-y-5">
-        
-        <!-- Tab: Aktif -->
-        <div id="tab-active" class="tab-content active space-y-4">
-            <div id="activeList" class="space-y-4"></div>
+        <!-- Tab: Main List (Dipakai untuk Ngutangin dan Utang Saya) -->
+        <div id="tab-main" class="tab-content active space-y-4">
+            <div id="mainList" class="space-y-4"></div>
         </div>
 
         <!-- Tab: History -->
         <div id="tab-history" class="tab-content space-y-4">
-            <div class="flex items-center bg-white dark:bg-slate-800 p-1.5 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm">
+            <div class="flex items-center bg-white dark:bg-slate-800 p-1.5 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm transition-colors duration-300">
                 <div class="pl-3 text-slate-400"><i class="ph-bold ph-funnel"></i></div>
                 <select id="historyFilter" onchange="renderHistory()" class="w-full bg-transparent border-none text-sm font-medium focus:ring-0 text-slate-700 dark:text-slate-200 py-2.5 px-2 outline-none appearance-none">
-                    <option value="all">Semua Riwayat Transaksi</option>
+                    <option value="all" class="text-slate-800 bg-white dark:bg-slate-700 dark:text-white">Semua Riwayat Transaksi</option>
                 </select>
                 <div class="pr-3 text-slate-400 pointer-events-none"><i class="ph-bold ph-caret-down text-sm"></i></div>
             </div>
-            
             <div id="historyList" class="space-y-4"></div>
         </div>
     </main>
 
-    <button onclick="openSheet('addPersonSheet')" class="fixed bottom-6 right-6 w-14 h-14 bg-brand-600 hover:bg-brand-700 active:bg-brand-800 text-white rounded-full shadow-[0_8px_20px_rgba(37,99,235,0.4)] flex items-center justify-center transition-transform transform hover:scale-105 z-30">
+    <!-- Floating Action Button -->
+    <button id="mainFabBtn" onclick="openSheet('addPersonSheet')" class="fixed bottom-6 right-6 w-14 h-14 bg-brand-600 hover:bg-brand-700 active:bg-brand-800 text-white rounded-full shadow-[0_8px_20px_rgba(37,99,235,0.4)] flex items-center justify-center transition-transform transform hover:scale-105 z-30">
         <i class="ph-bold ph-user-plus text-2xl"></i>
     </button>
 
     <!-- Sheet: Add Person -->
     <div id="addPersonSheet" class="fixed inset-0 z-50 flex items-end justify-center hidden-sheet">
         <div class="bottom-sheet-overlay absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onclick="closeSheet('addPersonSheet')"></div>
-        <div class="bottom-sheet-content relative w-full max-w-md bg-white dark:bg-slate-800 rounded-t-3xl p-6 shadow-2xl">
+        <div class="bottom-sheet-content relative w-full max-w-md bg-white dark:bg-slate-800 rounded-t-3xl p-6 shadow-2xl transition-colors duration-300">
             <div class="w-12 h-1.5 bg-slate-200 dark:bg-slate-700 rounded-full mx-auto mb-6"></div>
-            <h3 class="text-xl font-bold mb-5 flex items-center gap-2"><i class="ph-fill ph-user-plus text-brand-500"></i> Teman Baru</h3>
-            <form onsubmit="addPerson(event)" class="space-y-4">
-                <div>
-                    <input type="text" id="newPersonName" placeholder="Nama Orang (contoh: Budi)" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3.5 focus:outline-none focus:ring-2 focus:ring-brand-500 text-slate-800 dark:text-slate-100 transition-all" required />
-                </div>
+            <h3 class="text-xl font-bold mb-1 flex items-center gap-2 text-slate-800 dark:text-white"><i class="ph-fill ph-user-plus text-brand-500"></i> Teman Baru</h3>
+            <p id="addPersonSubtitle" class="text-xs text-slate-500 dark:text-slate-400 mb-5">Masuk ke daftar: Ngutangin</p>
+            <form onsubmit="addPerson(event)" class="space-y-3">
+                <input type="text" id="newPersonName" placeholder="Nama Orang (contoh: Budi)" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3.5 focus:outline-none focus:ring-2 focus:ring-brand-500 text-slate-800 dark:text-slate-100 transition-all" required autocomplete="off"/>
                 <div class="relative">
                     <span class="absolute left-4 top-3.5 text-slate-400"><i class="ph-fill ph-whatsapp-logo text-lg"></i></span>
-                    <input type="tel" id="newPersonPhone" placeholder="No. WA (Opsional: 0812...)" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl pl-11 pr-4 py-3.5 focus:outline-none focus:ring-2 focus:ring-brand-500 text-slate-800 dark:text-slate-100 transition-all" />
+                    <input type="tel" id="newPersonPhone" placeholder="No. WA (Opsional: 0812...)" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl pl-11 pr-4 py-3.5 focus:outline-none focus:ring-2 focus:ring-brand-500 text-slate-800 dark:text-slate-100 transition-all" autocomplete="off"/>
+                </div>
+                <div class="relative">
+                    <span class="absolute left-4 top-3.5 text-slate-400"><i class="ph-fill ph-note text-lg"></i></span>
+                    <input type="text" id="newPersonNotes" placeholder="Catatan / No. Rekening (Opsional)" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl pl-11 pr-4 py-3.5 focus:outline-none focus:ring-2 focus:ring-brand-500 text-slate-800 dark:text-slate-100 transition-all" autocomplete="off"/>
                 </div>
                 <button type="submit" class="w-full mt-2 bg-brand-600 hover:bg-brand-700 text-white px-5 py-4 rounded-xl font-bold shadow-md transition-colors text-lg">Simpan Orang</button>
             </form>
@@ -166,9 +173,9 @@
     <!-- Sheet: Add Item -->
     <div id="addItemSheet" class="fixed inset-0 z-50 flex items-end justify-center hidden-sheet">
         <div class="bottom-sheet-overlay absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onclick="closeSheet('addItemSheet')"></div>
-        <div class="bottom-sheet-content relative w-full max-w-md bg-white dark:bg-slate-800 rounded-t-3xl p-6 shadow-2xl">
+        <div class="bottom-sheet-content relative w-full max-w-md bg-white dark:bg-slate-800 rounded-t-3xl p-6 shadow-2xl transition-colors duration-300">
             <div class="w-12 h-1.5 bg-slate-200 dark:bg-slate-700 rounded-full mx-auto mb-6"></div>
-            <h3 class="text-xl font-bold mb-1 flex items-center gap-2"><i class="ph-fill ph-receipt text-brand-500"></i> Tambah Catatan Bon</h3>
+            <h3 class="text-xl font-bold mb-1 flex items-center gap-2 text-slate-800 dark:text-white"><i class="ph-fill ph-receipt text-brand-500"></i> Tambah Catatan Bon</h3>
             <p id="addItemPersonName" class="text-sm text-slate-500 dark:text-slate-400 mb-5">Untuk: -</p>
             <form onsubmit="addItem(event)" class="space-y-4">
                 <input type="hidden" id="addItemPersonId">
@@ -177,11 +184,19 @@
                         <span class="absolute left-3 top-3.5 text-slate-400"><i class="ph-fill ph-calendar-blank"></i></span>
                         <input type="date" id="newItemDate" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl pl-9 pr-2 py-3.5 text-sm focus:ring-2 focus:ring-brand-500 text-slate-800 dark:text-slate-100" required/>
                     </div>
-                    <input type="text" id="newItemName" placeholder="Pesanan (cth: Nasi Goreng)" class="flex-1 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3.5 focus:ring-2 focus:ring-brand-500 text-slate-800 dark:text-slate-100" required/>
+                    <input type="text" id="newItemName" placeholder="Pesanan (cth: Nasi Goreng)" class="flex-1 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3.5 focus:ring-2 focus:ring-brand-500 text-slate-800 dark:text-slate-100" required autocomplete="off"/>
                 </div>
+                
+                <!-- Due date opsional -->
+                <div class="relative">
+                    <span class="absolute left-4 top-3.5 text-slate-400"><i class="ph-fill ph-clock-countdown text-lg"></i></span>
+                    <input type="date" id="newItemDueDate" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl pl-11 pr-4 py-3.5 text-sm text-slate-500 focus:ring-2 focus:ring-brand-500 dark:text-slate-400" />
+                    <span class="absolute right-4 top-4 text-[10px] uppercase font-bold text-slate-400 pointer-events-none">Jatuh Tempo (Opsional)</span>
+                </div>
+
                 <div class="relative">
                     <span class="absolute left-4 top-3.5 text-slate-500 font-bold">Rp</span>
-                    <input type="text" inputmode="numeric" oninput="formatPriceInput(this)" id="newItemPrice" placeholder="15.000" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl pl-12 pr-4 py-3.5 text-lg font-bold focus:ring-2 focus:ring-brand-500 text-slate-800 dark:text-slate-100" required/>
+                    <input type="text" inputmode="numeric" oninput="formatPriceInput(this)" id="newItemPrice" placeholder="15.000" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl pl-12 pr-4 py-3.5 text-lg font-bold focus:ring-2 focus:ring-brand-500 text-slate-800 dark:text-slate-100" required autocomplete="off"/>
                 </div>
                 <button type="submit" class="w-full bg-brand-600 hover:bg-brand-700 text-white px-5 py-4 rounded-xl font-bold shadow-md transition-colors text-lg">Catat Bon</button>
             </form>
@@ -191,10 +206,10 @@
     <!-- Sheet: Payment (Cicil) -->
     <div id="paymentSheet" class="fixed inset-0 z-50 flex items-end justify-center hidden-sheet">
         <div class="bottom-sheet-overlay absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onclick="closeSheet('paymentSheet')"></div>
-        <div class="bottom-sheet-content relative w-full max-w-md bg-white dark:bg-slate-800 rounded-t-3xl p-6 shadow-2xl">
+        <div class="bottom-sheet-content relative w-full max-w-md bg-white dark:bg-slate-800 rounded-t-3xl p-6 shadow-2xl transition-colors duration-300">
             <div class="w-12 h-1.5 bg-slate-200 dark:bg-slate-700 rounded-full mx-auto mb-6"></div>
-            <h3 class="text-xl font-bold mb-1">Bayar / Cicil</h3>
-            <p id="payItemTitle" class="text-sm font-medium text-slate-500 dark:text-slate-400 mb-4 bg-slate-100 dark:bg-slate-900 p-3 rounded-lg border border-slate-200 dark:border-slate-700 truncate"></p>
+            <h3 class="text-xl font-bold mb-1 text-slate-800 dark:text-white">Bayar / Cicil</h3>
+            <p id="payItemTitle" class="text-sm font-medium text-slate-500 dark:text-slate-400 mb-4 bg-slate-50 dark:bg-slate-900/50 p-3 rounded-lg border border-slate-200 dark:border-slate-700 truncate"></p>
             
             <form onsubmit="processPayment(event)" class="space-y-4">
                 <input type="hidden" id="payPersonId">
@@ -205,14 +220,18 @@
                     <label class="block text-xs font-bold text-slate-400 uppercase mb-2">Uang yang dibayarkan</label>
                     <div class="relative">
                         <span class="absolute left-4 top-3.5 text-brand-600 dark:text-brand-400 font-bold">Rp</span>
-                        <input type="text" inputmode="numeric" oninput="formatPriceInput(this); calculatePaymentFeedback();" id="payAmountInput" class="w-full bg-brand-50 dark:bg-slate-900 border-2 border-brand-200 dark:border-brand-700 rounded-xl pl-12 pr-4 py-3.5 text-2xl font-bold focus:ring-brand-500 text-brand-700 dark:text-brand-300" required/>
+                        <input type="text" inputmode="numeric" oninput="formatPriceInput(this); calculatePaymentFeedback();" id="payAmountInput" class="w-full bg-brand-50 dark:bg-slate-900 border-2 border-brand-200 dark:border-brand-700 rounded-xl pl-12 pr-4 py-3.5 text-2xl font-bold focus:ring-brand-500 text-brand-700 dark:text-brand-300 transition-colors" required autocomplete="off"/>
                     </div>
-                    <!-- Area Kembalian / Sisa -->
+                    
                     <div id="paymentFeedback" class="mt-2 min-h-[20px] text-sm"></div>
 
-                    <div class="flex justify-between items-center mt-3">
-                        <span class="text-xs text-slate-400">Pilih cepat:</span>
-                        <button type="button" onclick="setFullPayment()" id="btnSetFull" class="text-xs font-bold bg-brand-100 dark:bg-brand-900/40 text-brand-600 dark:text-brand-300 px-3 py-1.5 rounded-lg border border-brand-200 dark:border-brand-700 transition-colors">Lunas (Rp 0)</button>
+                    <div class="flex justify-between items-center mt-3 gap-2">
+                        <span class="text-xs text-slate-400 shrink-0">Cepat:</span>
+                        <div class="flex gap-2 flex-1 overflow-x-auto pb-1 no-scrollbar">
+                            <button type="button" onclick="setQuickPayment(10000)" class="text-xs font-bold bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-600 whitespace-nowrap">10rb</button>
+                            <button type="button" onclick="setHalfPayment()" class="text-xs font-bold bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-600 whitespace-nowrap">Setengah</button>
+                            <button type="button" onclick="setFullPayment()" id="btnSetFull" class="text-xs font-bold bg-brand-100 dark:bg-brand-900/40 text-brand-600 dark:text-brand-300 px-3 py-2 rounded-lg border border-brand-200 dark:border-brand-700 whitespace-nowrap">Lunas</button>
+                        </div>
                     </div>
                 </div>
                 
@@ -226,14 +245,14 @@
     <!-- Sheet: Settings -->
     <div id="settingsSheet" class="fixed inset-0 z-50 flex items-end justify-center hidden-sheet">
         <div class="bottom-sheet-overlay absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onclick="closeSheet('settingsSheet')"></div>
-        <div class="bottom-sheet-content relative w-full max-w-md bg-white dark:bg-slate-800 rounded-t-3xl p-6 shadow-2xl">
+        <div class="bottom-sheet-content relative w-full max-w-md bg-white dark:bg-slate-800 rounded-t-3xl p-6 shadow-2xl transition-colors duration-300">
             <div class="w-12 h-1.5 bg-slate-200 dark:bg-slate-700 rounded-full mx-auto mb-6"></div>
             <h3 class="text-xl font-bold text-slate-800 dark:text-slate-100 mb-5">Pengaturan</h3>
             
             <div class="space-y-3">
                 <button id="installBtn" class="hidden w-full flex items-center gap-4 p-4 bg-purple-50 dark:bg-purple-900/30 border border-purple-100 dark:border-purple-800 rounded-2xl text-purple-700 dark:text-purple-400 hover:bg-purple-100 text-left transition-colors">
                     <i class="ph-fill ph-download text-3xl"></i>
-                    <div><div class="font-bold">Instal ke HP</div><div class="text-xs opacity-80 mt-0.5">Jadikan seperti aplikasi biasa</div></div>
+                    <div><div class="font-bold">Instal Aplikasi</div><div class="text-xs opacity-80 mt-0.5">Tambahkan ke layar utama HP</div></div>
                 </button>
 
                 <button onclick="exportData()" class="w-full flex items-center gap-4 p-4 bg-blue-50 dark:bg-brand-900/30 border border-blue-100 dark:border-brand-800 rounded-2xl text-brand-700 dark:text-brand-400 hover:bg-blue-100 text-left transition-colors">
@@ -254,23 +273,36 @@
         </div>
     </div>
 
+    <!-- Dialog Kustom -->
     <div id="customDialogOverlay" class="fixed inset-0 bg-slate-900/70 z-[100] hidden flex items-center justify-center p-4 backdrop-blur-sm opacity-0 transition-opacity">
-        <div id="customDialogBox" class="bg-white dark:bg-slate-800 w-full max-w-sm rounded-3xl p-6 shadow-2xl transform scale-95 transition-transform">
+        <div id="customDialogBox" class="bg-white dark:bg-slate-800 w-full max-w-sm rounded-3xl p-6 shadow-2xl transform scale-95 transition-all duration-300">
             <h3 id="dialogTitle" class="text-xl font-bold text-slate-800 dark:text-white mb-2">Konfirmasi</h3>
-            <p id="dialogMessage" class="text-slate-500 dark:text-slate-400 mb-6 leading-relaxed text-sm">Pesan</p>
+            <div id="dialogMessage" class="text-slate-600 dark:text-slate-300 mb-6 leading-relaxed text-sm">Pesan</div>
             <div class="flex gap-3 justify-end">
                 <button id="dialogBtnCancel" onclick="closeDialog()" class="px-5 py-2.5 rounded-xl font-bold text-slate-500 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-700 transition-colors">Batal</button>
-                <button id="dialogBtnConfirm" class="px-5 py-2.5 rounded-xl font-bold bg-brand-600 text-white hover:bg-brand-700 transition-colors">Ya, Lanjutkan</button>
+                <button id="dialogBtnConfirm" class="px-5 py-2.5 rounded-xl font-bold bg-brand-600 text-white hover:bg-brand-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">Ya, Lanjutkan</button>
             </div>
         </div>
     </div>
 
     <script>
-        // Data Structure Map
-        const defaultData = { active: [], history: [] };
+        // Gaya tambahan untuk menyembunyikan scrollbar
+        const style = document.createElement('style');
+        style.innerHTML = `.no-scrollbar::-webkit-scrollbar { display: none; } .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }`;
+        document.head.appendChild(style);
+
+        // Header scroll effect
+        window.addEventListener('scroll', () => {
+            const header = document.getElementById('mainHeader');
+            if(window.scrollY > 10) header.classList.add('header-shrink');
+            else header.classList.remove('header-shrink');
+        });
+
+        const defaultData = { ngutangin: [], utangSaya: [], history: [] };
         let appData = defaultData;
         let expandedPersonId = null;
-        let selectedCheckboxes = {}; // { personId: [itemId1, itemId2] }
+        let selectedCheckboxes = {}; 
+        let currentTab = 'ngutangin';
 
         // Format Helpers
         const formatRupiah = (num) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(num);
@@ -288,44 +320,73 @@
             return `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
         }
 
-        // Data Management
+        function triggerConfetti() {
+            if (typeof confetti === 'function') {
+                confetti({
+                    particleCount: 150,
+                    spread: 70,
+                    origin: { y: 0.6 },
+                    colors: ['#2563eb', '#10b981', '#f59e0b', '#ef4444', '#a855f7']
+                });
+            }
+        }
+
+        // Data Management & Migration
         function loadData() {
             try {
-                const stored = localStorage.getItem('ngutangProDataV3');
+                const stored = localStorage.getItem('ngutangData');
                 if (stored) {
                     appData = JSON.parse(stored);
-                    // Migrasi internal: Pastikan setiap item punya array paymentHistory
-                    appData.active.forEach(p => {
-                        p.items.forEach(i => {
-                            if(!i.paymentHistory) i.paymentHistory = [];
+                    if (appData.active) { appData.ngutangin = appData.active; delete appData.active; }
+                    if (!appData.ngutangin) appData.ngutangin = [];
+                    if (!appData.utangSaya) appData.utangSaya = [];
+                    
+                    ['ngutangin', 'utangSaya'].forEach(listName => {
+                        appData[listName].forEach(p => {
+                            if(!p.notes) p.notes = '';
+                            p.items.forEach(i => { 
+                                if(!i.paymentHistory) i.paymentHistory = []; 
+                                if(!i.dueDate) i.dueDate = '';
+                            });
                         });
                     });
-                } else if (localStorage.getItem('ngutangProDataV2')) {
-                    // Fallback ke data v2 jika ada
-                    appData = JSON.parse(localStorage.getItem('ngutangProDataV2'));
-                    appData.active.forEach(p => p.items.forEach(i => { if(!i.paymentHistory) i.paymentHistory = []; }));
                 }
             } catch (e) { appData = defaultData; }
         }
 
         function saveData() {
-            localStorage.setItem('ngutangProDataV3', JSON.stringify(appData));
-            renderUI();
+            localStorage.setItem('ngutangData', JSON.stringify(appData));
+            if (currentTab === 'history') renderHistory(); else renderUI();
         }
 
         // Dialog System
         let dialogConfirmCallback = null;
-        function showConfirm(title, message, callback, btnText = "Ya, Lanjutkan", btnColor = "bg-brand-600") {
+        function showConfirm(title, message, callback, btnText = "Ya", btnColor = "bg-brand-600", requireInput = false) {
             document.getElementById('dialogTitle').innerText = title;
-            document.getElementById('dialogMessage').innerText = message;
-            
+            let messageHtml = `<p>${message}</p>`;
+            if (requireInput) {
+                messageHtml += `
+                    <div class="mt-4">
+                        <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-2">Ketik "HAPUS" untuk konfirmasi:</label>
+                        <input type="text" id="confirmInput" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-2.5 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-red-500 transition-colors" oninput="validateConfirmInput(this.value)" autocomplete="off">
+                    </div>
+                `;
+            }
+            document.getElementById('dialogMessage').innerHTML = messageHtml;
             const btnConfirm = document.getElementById('dialogBtnConfirm');
             btnConfirm.innerText = btnText;
             btnConfirm.className = `px-5 py-2.5 rounded-xl font-bold text-white transition-colors ${btnColor}`;
             
+            if (requireInput) {
+                btnConfirm.disabled = true;
+                btnConfirm.classList.add('opacity-50', 'cursor-not-allowed');
+            } else {
+                btnConfirm.disabled = false;
+                btnConfirm.classList.remove('opacity-50', 'cursor-not-allowed');
+            }
+
             document.getElementById('dialogBtnCancel').classList.remove('hidden');
             dialogConfirmCallback = callback;
-            
             const overlay = document.getElementById('customDialogOverlay');
             const box = document.getElementById('customDialogBox');
             overlay.classList.remove('hidden');
@@ -334,26 +395,32 @@
                 box.classList.remove('scale-95');
                 box.classList.add('scale-100');
             }, 10);
+            if (requireInput) setTimeout(() => document.getElementById('confirmInput')?.focus(), 300);
+        }
+
+        function validateConfirmInput(value) {
+            const btnConfirm = document.getElementById('dialogBtnConfirm');
+            if (value.trim().toUpperCase() === 'HAPUS') {
+                btnConfirm.disabled = false;
+                btnConfirm.classList.remove('opacity-50', 'cursor-not-allowed');
+            } else {
+                btnConfirm.disabled = true;
+                btnConfirm.classList.add('opacity-50', 'cursor-not-allowed');
+            }
         }
 
         function showAlert(title, message, isWarning = false) {
             document.getElementById('dialogTitle').innerText = title;
             document.getElementById('dialogMessage').innerText = message;
-            
             const btnConfirm = document.getElementById('dialogBtnConfirm');
             btnConfirm.innerText = "Tutup";
             btnConfirm.className = `px-5 py-2.5 rounded-xl font-bold text-white transition-colors ${isWarning ? 'bg-orange-500 hover:bg-orange-600' : 'bg-brand-600 hover:bg-brand-700'}`;
-            
             document.getElementById('dialogBtnCancel').classList.add('hidden');
             dialogConfirmCallback = null;
-            
             const overlay = document.getElementById('customDialogOverlay');
             const box = document.getElementById('customDialogBox');
             overlay.classList.remove('hidden');
-            setTimeout(() => {
-                overlay.classList.add('opacity-100');
-                box.classList.remove('scale-100');
-            }, 10);
+            setTimeout(() => { overlay.classList.add('opacity-100'); box.classList.remove('scale-95'); box.classList.add('scale-100'); }, 10);
         }
 
         document.getElementById('dialogBtnConfirm').addEventListener('click', () => {
@@ -370,24 +437,37 @@
             setTimeout(() => overlay.classList.add('hidden'), 200);
         }
 
-        // Tabs & Sheets
         function switchTab(tab) {
-            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
-            document.getElementById(`tab-${tab}`).classList.add('active');
-
-            const btnActive = document.getElementById('tabBtn-active');
+            currentTab = tab;
+            document.getElementById('tab-main').classList.remove('active');
+            document.getElementById('tab-history').classList.remove('active');
+            
+            const btnNgutangin = document.getElementById('tabBtn-ngutangin');
+            const btnUtangSaya = document.getElementById('tabBtn-utangSaya');
             const btnHistory = document.getElementById('tabBtn-history');
             
-            const activeStyle = "flex-1 py-2.5 text-sm font-bold rounded-lg bg-white dark:bg-slate-700 shadow-sm text-brand-700 dark:text-blue-300 transition-all";
-            const inactiveStyle = "flex-1 py-2.5 text-sm font-medium rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition-all";
+            const activeStyle = "flex-1 py-2 text-[11px] sm:text-sm font-bold rounded-lg bg-white dark:bg-slate-700 shadow-sm text-brand-700 dark:text-blue-300 transition-all";
+            const inactiveStyle = "flex-1 py-2 text-[11px] sm:text-sm font-medium rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition-all";
 
-            if(tab === 'active') {
-                btnActive.className = activeStyle;
-                btnHistory.className = inactiveStyle;
+            btnNgutangin.className = tab === 'ngutangin' ? activeStyle : inactiveStyle;
+            btnUtangSaya.className = tab === 'utangSaya' ? activeStyle : inactiveStyle;
+            btnHistory.className = tab === 'history' ? activeStyle : inactiveStyle;
+
+            const fab = document.getElementById('mainFabBtn');
+            const searchSort = document.getElementById('searchSortArea');
+
+            if(tab === 'ngutangin' || tab === 'utangSaya') {
+                document.getElementById('tab-main').classList.add('active');
+                fab.classList.remove('hidden');
+                searchSort.classList.remove('hidden');
+                document.getElementById('headerTitle').innerText = tab === 'ngutangin' ? 'TOTAL NGUTANGIN' : 'TOTAL UTANG SAYA';
                 renderUI();
             } else {
-                btnHistory.className = activeStyle;
-                btnActive.className = inactiveStyle;
+                document.getElementById('tab-history').classList.add('active');
+                fab.classList.add('hidden');
+                searchSort.classList.add('hidden');
+                document.getElementById('headerTitle').innerText = 'TOTAL TRANSAKSI LUNAS';
+                document.getElementById('totalGlobalDebt').innerText = '-';
                 renderHistory();
             }
         }
@@ -400,43 +480,62 @@
         function openSheet(sheetId) {
             const sheet = document.getElementById(sheetId);
             sheet.classList.remove('hidden-sheet');
+            
+            if (sheetId === 'addPersonSheet') {
+                const subtitle = document.getElementById('addPersonSubtitle');
+                subtitle.innerText = `Masuk ke daftar: ${currentTab === 'ngutangin' ? 'Ngutangin' : 'Utang Saya'}`;
+                setTimeout(() => document.getElementById('newPersonName').focus(), 300);
+            }
             if (sheetId === 'addItemSheet') {
                 document.getElementById('newItemDate').value = getTodayDate();
+                document.getElementById('newItemDueDate').value = '';
                 setTimeout(() => document.getElementById('newItemName').focus(), 300);
             }
         }
 
-        function closeSheet(sheetId) {
-            document.getElementById(sheetId).classList.add('hidden-sheet');
+        function closeSheet(sheetId) { document.getElementById(sheetId).classList.add('hidden-sheet'); }
+
+        function getCurrentList() { return currentTab === 'utangSaya' ? appData.utangSaya : appData.ngutangin; }
+
+        function findPersonById(personId) {
+            let person = appData.ngutangin.find(p => p.id === personId);
+            if (person) return { person, sourceList: 'ngutangin' };
+            person = appData.utangSaya.find(p => p.id === personId);
+            if (person) return { person, sourceList: 'utangSaya' };
+            return { person: null, sourceList: null };
         }
 
-        // CRUD Operations
         function addPerson(e) {
             e.preventDefault();
             const nameInput = document.getElementById('newPersonName');
             const phoneInput = document.getElementById('newPersonPhone');
+            const notesInput = document.getElementById('newPersonNotes');
+            
             const name = nameInput.value.trim();
             let phone = phoneInput.value.replace(/\D/g, '');
+            const notes = notesInput.value.trim();
             
             if (!name) return;
             if (phone.startsWith('0')) phone = '62' + phone.substring(1); 
 
-            appData.active.unshift({
+            const targetList = getCurrentList();
+            targetList.unshift({
                 id: 'p_' + Date.now().toString(),
                 name: name,
                 phone: phone,
+                notes: notes,
                 items: []
             });
 
-            nameInput.value = '';
-            phoneInput.value = '';
+            nameInput.value = ''; phoneInput.value = ''; notesInput.value = '';
             closeSheet('addPersonSheet');
             saveData();
         }
 
         function triggerDeletePerson(personId) {
-            showConfirm("Hapus Teman?", "Orang ini dan semua catatan hutangnya yang belum lunas akan dihapus permanen.", () => {
-                appData.active = appData.active.filter(p => p.id !== personId);
+            showConfirm("Hapus Kontak?", "Kontak ini dan semua catatan hutangnya yang belum lunas akan dihapus permanen.", () => {
+                appData.ngutangin = appData.ngutangin.filter(p => p.id !== personId);
+                appData.utangSaya = appData.utangSaya.filter(p => p.id !== personId);
                 delete selectedCheckboxes[personId];
                 saveData();
             }, "Hapus", "bg-red-500 hover:bg-red-600");
@@ -457,69 +556,76 @@
             const dateInput = document.getElementById('newItemDate').value;
             const nameInput = document.getElementById('newItemName').value.trim();
             const rawPrice = getRawNumber(document.getElementById('newItemPrice').value);
+            const dueDateInput = document.getElementById('newItemDueDate').value;
             
             if (!nameInput || !rawPrice || !dateInput) return;
 
             const d = new Date(dateInput);
             const formattedDate = `${d.getDate()}/${d.getMonth() + 1}`; 
 
-            const person = appData.active.find(p => p.id === personId);
+            const { person } = findPersonById(personId);
             if (person) {
-                person.items.push({
+                person.items.unshift({
                     id: 'i_' + Date.now().toString(),
                     date: formattedDate,
                     rawDate: dateInput,
+                    dueDate: dueDateInput,
                     name: nameInput,
                     originalPrice: rawPrice,
                     paidAmount: 0,
                     remainingPrice: rawPrice,
-                    paymentHistory: [] // Array untuk simpan riwayat cicilan
+                    paymentHistory: []
                 });
             }
 
             closeSheet('addItemSheet');
-            if (expandedPersonId !== personId) toggleAccordion(personId); 
-            else saveData(); 
+            if (expandedPersonId !== personId) toggleAccordion(personId); else saveData(); 
         }
 
         function triggerDeleteItem(personId, itemId, event) {
             event.stopPropagation();
             showConfirm("Hapus Item?", "Catatan pesanan ini akan dihapus.", () => {
-                const person = appData.active.find(p => p.id === personId);
+                const { person } = findPersonById(personId);
                 if (person) {
                     person.items = person.items.filter(i => i.id !== itemId);
-                    if (selectedCheckboxes[personId]) {
-                        selectedCheckboxes[personId] = selectedCheckboxes[personId].filter(id => id !== itemId);
-                    }
+                    if (selectedCheckboxes[personId]) selectedCheckboxes[personId] = selectedCheckboxes[personId].filter(id => id !== itemId);
                     saveData();
                 }
             }, "Hapus", "bg-red-500 hover:bg-red-600");
         }
 
-        // Payment System & Real-time Feedback
         function triggerPayment(personId, itemId, event) {
             event.stopPropagation();
-            const person = appData.active.find(p => p.id === personId);
+            const { person } = findPersonById(personId);
             const item = person.items.find(i => i.id === itemId);
             
             document.getElementById('payPersonId').value = personId;
             document.getElementById('payItemId').value = itemId;
             document.getElementById('payMaxAmount').value = item.remainingPrice;
             document.getElementById('payAmountInput').value = '';
-            document.getElementById('paymentFeedback').innerHTML = ''; // Reset
+            document.getElementById('paymentFeedback').innerHTML = '';
             
-            document.getElementById('payItemTitle').innerText = `${item.name} (Sisa Utang: ${formatRupiah(item.remainingPrice)})`;
+            document.getElementById('payItemTitle').innerText = `${item.name} (Sisa: ${formatRupiah(item.remainingPrice)})`;
             document.getElementById('btnSetFull').innerText = `Lunas (${formatNumber(item.remainingPrice)})`;
             
             openSheet('paymentSheet');
             setTimeout(() => document.getElementById('payAmountInput').focus(), 300);
         }
 
+        function setQuickPayment(amount) {
+            const input = document.getElementById('payAmountInput');
+            input.value = formatNumber(amount);
+            calculatePaymentFeedback();
+        }
+
+        function setHalfPayment() {
+            const max = document.getElementById('payMaxAmount').value;
+            setQuickPayment(Math.ceil(max / 2));
+        }
+
         function setFullPayment() {
             const max = document.getElementById('payMaxAmount').value;
-            const input = document.getElementById('payAmountInput');
-            input.value = formatNumber(max);
-            calculatePaymentFeedback(); // Trigger feedback
+            setQuickPayment(max);
         }
 
         function calculatePaymentFeedback() {
@@ -528,10 +634,7 @@
             const payAmount = getRawNumber(input.value);
             const feedbackEl = document.getElementById('paymentFeedback');
             
-            if (!payAmount) {
-                feedbackEl.innerHTML = '';
-                return;
-            }
+            if (!payAmount) { feedbackEl.innerHTML = ''; return; }
             
             const diff = payAmount - max;
             if (diff > 0) {
@@ -539,7 +642,7 @@
             } else if (diff < 0) {
                 feedbackEl.innerHTML = `<span class="text-brand-600 dark:text-brand-400 font-medium">Sisa utang nanti: ${formatRupiah(Math.abs(diff))}</span>`;
             } else {
-                feedbackEl.innerHTML = `<span class="text-emerald-500 font-bold">Lunas Pas!</span>`;
+                feedbackEl.innerHTML = `<span class="text-emerald-600 dark:text-emerald-400 font-bold">Lunas Pas!</span>`;
             }
         }
 
@@ -549,7 +652,7 @@
             const itemId = document.getElementById('payItemId').value;
             const payAmount = getRawNumber(document.getElementById('payAmountInput').value);
             
-            const person = appData.active.find(p => p.id === personId);
+            const { person, sourceList } = findPersonById(personId);
             if (!person) return;
             const itemIndex = person.items.findIndex(i => i.id === itemId);
             if (itemIndex === -1) return;
@@ -557,53 +660,46 @@
 
             if (payAmount <= 0) return;
             
-            // Hitung logika kembalian
             const actualPaymentToDebt = Math.min(payAmount, item.remainingPrice);
             const changeAmount = payAmount > item.remainingPrice ? payAmount - item.remainingPrice : 0;
             
-            // Rekam di array history item
             if(!item.paymentHistory) item.paymentHistory = [];
             item.paymentHistory.push(actualPaymentToDebt);
 
-            // Rekam Histori Global
-            recordHistoryEvent(person, [{ name: item.name, paidAmount: actualPaymentToDebt }], actualPaymentToDebt, item.remainingPrice <= actualPaymentToDebt, changeAmount);
+            recordHistoryEvent(person, [{ name: item.name, paidAmount: actualPaymentToDebt }], actualPaymentToDebt, item.remainingPrice <= actualPaymentToDebt, changeAmount, sourceList);
 
             item.paidAmount += actualPaymentToDebt;
             item.remainingPrice -= actualPaymentToDebt;
 
-            // Jika lunas, hapus dari list aktif
+            let wasFullyPaid = false;
             if (item.remainingPrice <= 0) {
                 person.items.splice(itemIndex, 1);
-                if (selectedCheckboxes[personId]) {
-                    selectedCheckboxes[personId] = selectedCheckboxes[personId].filter(id => id !== itemId);
-                }
+                wasFullyPaid = true;
+                if (selectedCheckboxes[personId]) selectedCheckboxes[personId] = selectedCheckboxes[personId].filter(id => id !== itemId);
             }
 
             closeSheet('paymentSheet');
             saveData();
             
+            if (wasFullyPaid) triggerConfetti();
+            
             if (changeAmount > 0) {
-                showAlert("Transaksi Selesai", `Hutang lunas.\n\nJangan lupa berikan kembalian sebesar:\n${formatRupiah(changeAmount)}`, true);
+                showAlert("Transaksi Selesai", `Telah lunas.\n\nJangan lupa ada kembalian sebesar:\n${formatRupiah(changeAmount)}`, true);
             }
         }
 
-        // Lunas Multi Item
         function toggleCheckbox(personId, itemId) {
             if (!selectedCheckboxes[personId]) selectedCheckboxes[personId] = [];
             const index = selectedCheckboxes[personId].indexOf(itemId);
-            if (index > -1) {
-                selectedCheckboxes[personId].splice(index, 1);
-            } else {
-                selectedCheckboxes[personId].push(itemId);
-            }
+            if (index > -1) selectedCheckboxes[personId].splice(index, 1);
+            else selectedCheckboxes[personId].push(itemId);
             renderUI(); 
         }
 
         function paySelectedItems(personId, event) {
             event.stopPropagation();
-            const person = appData.active.find(p => p.id === personId);
+            const { person, sourceList } = findPersonById(personId);
             const selectedIds = selectedCheckboxes[personId] || [];
-            
             if (selectedIds.length === 0) return;
 
             showConfirm("Lunas Terpilih?", `Tandai ${selectedIds.length} item terpilih lunas penuh?`, () => {
@@ -616,24 +712,21 @@
                         const item = person.items[itemIndex];
                         totalPaidThisTransaction += item.remainingPrice;
                         paidItemsInfo.push({ name: item.name, paidAmount: item.remainingPrice });
-                        
-                        // Lunas logic
                         item.paidAmount += item.remainingPrice;
                         item.remainingPrice = 0;
                     }
                 });
 
-                recordHistoryEvent(person, paidItemsInfo, totalPaidThisTransaction, true, 0);
-
-                // Buang item
+                recordHistoryEvent(person, paidItemsInfo, totalPaidThisTransaction, true, 0, sourceList);
                 person.items = person.items.filter(i => !selectedIds.includes(i.id));
                 selectedCheckboxes[personId] = [];
                 
+                triggerConfetti();
                 saveData();
             }, "Lunaskan", "bg-emerald-500 hover:bg-emerald-600");
         }
 
-        function recordHistoryEvent(person, itemsInfo, totalAmount, isFull = false, changeAmount = 0) {
+        function recordHistoryEvent(person, itemsInfo, totalAmount, isFull = false, changeAmount = 0, sourceList = 'ngutangin') {
             const today = new Date();
             appData.history.unshift({
                 id: 'h_' + Date.now().toString(),
@@ -644,31 +737,29 @@
                 type: isFull ? 'full' : 'partial',
                 items: itemsInfo,
                 totalAmount: totalAmount,
-                changeAmount: changeAmount // Simpan nominal kembalian jika ada
+                changeAmount: changeAmount,
+                sourceList: sourceList 
             });
         }
 
-        // WhatsApp Export
         function shareWhatsApp(personId, event) {
             event.stopPropagation();
-            const person = appData.active.find(p => p.id === personId);
+            const { person, sourceList } = findPersonById(personId);
             if (!person || person.items.length === 0) return;
 
             let totalSisa = 0;
-            let message = ``;
+            let message = '';
             
             person.items.forEach((item) => {
                 totalSisa += item.remainingPrice;
+                let cicilanSisa = '';
                 if (item.paymentHistory && item.paymentHistory.length > 0) {
-                    // Jika pernah dicicil
-                    const historyStr = item.paymentHistory.map(num => formatNumber(num)).join(', ');
-                    message += `▪ ${item.date} ${item.name}\n  Biaya: ${formatNumber(item.originalPrice)}\n  Telah dicicil: ${historyStr}\n  Sisa: *${formatNumber(item.remainingPrice)}*\n\n`;
-                } else {
-                    // Jika belum pernah dicicil (format ringkas)
-                    message += `▪ ${item.date} ${item.name} = *${formatNumber(item.originalPrice)}*\n`;
+                    const historyStr = item.paymentHistory.map(n => formatNumber(n)).join(', ');
+                    cicilanSisa = `(Telah dicicil: ${historyStr})\nSisa = Rp ${formatNumber(item.remainingPrice)}`;
                 }
+                message += `${item.date} ${item.name} = Rp ${formatNumber(item.originalPrice)}${cicilanSisa}\n`;
             });
-            message += `\n= Total Utang: *${formatNumber(totalSisa)}*`;
+            message += `\n= Total: Rp ${formatNumber(totalSisa)}`;
 
             const encodedMessage = encodeURIComponent(message);
             const whatsappUrl = person.phone 
@@ -677,41 +768,80 @@
             window.open(whatsappUrl, '_blank');
         }
 
+        function copyNotes(personId, event) {
+            if (event) event.stopPropagation();
+            const { person } = findPersonById(personId);
+            if (!person || !person.notes) return;
+            
+            const textArea = document.createElement("textarea");
+            textArea.value = person.notes;
+            textArea.style.position = "fixed";
+            document.body.appendChild(textArea);
+            textArea.focus();
+            textArea.select();
+            
+            try {
+                document.execCommand('copy');
+                showAlert("Tersalin", "Catatan disalin ke clipboard!");
+            } catch (err) {
+                showAlert("Gagal", "Tidak dapat menyalin catatan.");
+            }
+            document.body.removeChild(textArea);
+        }
+
+        function calculatePersonDebt(person) {
+            return person.items.reduce((total, i) => total + i.remainingPrice, 0);
+        }
+
         function renderUI() {
             let globalDebt = 0;
-            const activeContainer = document.getElementById('activeList');
-            activeContainer.innerHTML = '';
+            const container = document.getElementById('mainList');
+            container.innerHTML = '';
 
-            if (appData.active.length === 0) {
-                activeContainer.innerHTML = `
+            let listToRender = [...getCurrentList()];
+            
+            // Filtering
+            const query = document.getElementById('searchInput').value.toLowerCase().trim();
+            if(query) listToRender = listToRender.filter(p => p.name.toLowerCase().includes(query));
+
+            // Sorting
+            const sortVal = document.getElementById('sortSelect').value;
+            if(sortVal === 'az') {
+                listToRender.sort((a,b) => a.name.localeCompare(b.name));
+            } else if (sortVal === 'largest') {
+                listToRender.sort((a,b) => calculatePersonDebt(b) - calculatePersonDebt(a));
+            } else {
+                // Newest (default, array is unshifted)
+            }
+
+            const todayStr = getTodayDate();
+
+            if (listToRender.length === 0) {
+                container.innerHTML = `
                     <div class="flex flex-col items-center justify-center p-10 bg-white dark:bg-slate-800 rounded-2xl border border-dashed border-slate-300 dark:border-slate-700 text-slate-400">
                         <i class="ph-fill ph-users text-5xl mb-3 text-slate-300 dark:text-slate-600"></i>
-                        <p class="font-medium text-slate-500 dark:text-slate-400">Belum ada daftar teman.</p>
+                        <p class="font-medium text-slate-500 dark:text-slate-400 text-center text-sm">Tidak ada catatan ditemukan.<br>Mulai dengan klik + di bawah.</p>
                     </div>`;
             } else {
-                appData.active.forEach(person => {
+                listToRender.forEach(person => {
                     let personTotalDebt = 0;
                     let personTotalPaid = 0;
                     let personTotalOriginal = 0;
-                    let activeInstallments = []; // Untuk melacak nama item yang sedang dicicil
+                    let activeInstallments = []; 
                     
                     person.items.forEach(i => {
                         personTotalDebt += i.remainingPrice;
                         personTotalPaid += i.paidAmount;
                         personTotalOriginal += i.originalPrice;
                         
-                        if ((i.paymentHistory && i.paymentHistory.length > 0) && i.remainingPrice > 0) {
-                            activeInstallments.push(i.name);
-                        }
+                        if ((i.paymentHistory && i.paymentHistory.length > 0) && i.remainingPrice > 0) activeInstallments.push(i.name);
                     });
                     
                     globalDebt += personTotalDebt;
-
                     const isExpanded = expandedPersonId === person.id;
                     const selectedIds = selectedCheckboxes[person.id] || [];
                     let progressPercent = personTotalOriginal > 0 ? (personTotalPaid / personTotalOriginal) * 100 : 0;
 
-                    // Buat teks indikator dicicil untuk bagian luar (Accordion header)
                     let installmentIndicatorHtml = '';
                     if (activeInstallments.length > 0 && !isExpanded) {
                         installmentIndicatorHtml = `
@@ -721,44 +851,40 @@
                         `;
                     }
 
-                    // Render Daftar Bon Compact Style (Sesuai Referensi)
+                    // Render Daftar Bon Layout Compact Referensi Gambar
                     let itemsHtml = person.items.length === 0 
-                        ? `<div class="text-center py-5 bg-slate-50 dark:bg-slate-900/50 rounded-xl border border-dashed border-slate-200 dark:border-slate-700 text-slate-400 text-sm italic">Belum ada catatan bon</div>`
+                        ? `<div class="text-center py-5 bg-slate-50/50 dark:bg-slate-900/30 rounded-xl border border-dashed border-slate-300 dark:border-slate-700 text-slate-400 text-sm italic">Belum ada catatan bon</div>`
                         : `<div class="space-y-3 mb-4">` + person.items.map(item => {
                             const isChecked = selectedIds.includes(item.id);
                             const hasHistory = item.paymentHistory && item.paymentHistory.length > 0;
                             const historyText = hasHistory ? item.paymentHistory.map(n => formatNumber(n)).join(', ') : '';
+                            
+                            const isLate = item.dueDate && item.dueDate < todayStr;
+                            const lateBadge = isLate ? `<span class="ml-2 text-[10px] font-bold text-red-600 dark:text-red-400 bg-red-100 dark:bg-red-900/30 px-1.5 py-0.5 rounded">⚠️ Telat</span>` : '';
 
                             return `
-                            <div class="flex items-center gap-3 bg-[#1e293b] dark:bg-[#1e293b] text-slate-200 p-4 rounded-xl border border-slate-700 shadow-sm relative overflow-hidden transition-all cursor-pointer" onclick="toggleCheckbox('${person.id}', '${item.id}')">
-                                
-                                <!-- Kiri: Checkbox -->
+                            <div class="flex items-center gap-3 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 p-4 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm relative overflow-hidden transition-all cursor-pointer" onclick="toggleCheckbox('${person.id}', '${item.id}')">
                                 <div class="flex-shrink-0">
-                                    <input type="checkbox" class="custom-checkbox" ${isChecked ? 'checked' : ''} onclick="event.stopPropagation(); toggleCheckbox('${person.id}', '${item.id}')">
+                                    <input type="checkbox" class="custom-checkbox border-2 border-slate-300 dark:border-slate-600" ${isChecked ? 'checked' : ''} onclick="event.stopPropagation(); toggleCheckbox('${person.id}', '${item.id}')">
                                 </div>
-                                
-                                <!-- Tengah: Info -->
                                 <div class="flex-1 min-w-0 flex flex-col justify-between h-full">
                                     <div class="flex items-start justify-between w-full mb-1">
-                                        <h4 class="text-white font-bold text-base truncate capitalize leading-tight">${item.name}</h4>
-                                        <span class="text-xs font-bold text-brand-400 shrink-0 ml-2">${item.date}</span>
+                                        <h4 class="font-bold text-base truncate capitalize leading-tight flex items-center">${item.name} ${lateBadge}</h4>
+                                        <span class="text-xs font-bold text-brand-600 dark:text-brand-400 shrink-0 ml-2">${item.date}</span>
                                     </div>
-                                    
                                     <div class="flex items-end justify-between w-full mt-1">
                                         <div class="flex flex-col">
                                             ${hasHistory ? `
                                                 <span class="text-[11px] text-slate-400 line-through decoration-slate-500 mb-0.5">${formatNumber(item.originalPrice)}</span>
-                                                <span class="text-[10px] text-slate-400 font-light italic mb-0.5 truncate max-w-[150px]">Riwayat cicil: ${historyText}</span>
+                                                <span class="text-[10px] text-slate-500 dark:text-slate-400 font-light italic mb-0.5 truncate max-w-[150px]">Riwayat cicil: ${historyText}</span>
                                             ` : ''}
-                                            <span class="font-black text-white text-lg tracking-tight">${formatRupiah(item.remainingPrice)}</span>
+                                            <span class="font-black text-lg tracking-tight">${formatRupiah(item.remainingPrice)}</span>
                                         </div>
-                                        
-                                        <!-- Kanan Bawah: Tombol Aksi -->
                                         <div class="flex gap-2" onclick="event.stopPropagation()">
-                                            <button onclick="triggerPayment('${person.id}', '${item.id}', event)" class="bg-[#334155] hover:bg-[#475569] text-brand-400 h-9 w-9 rounded-lg transition-colors flex items-center justify-center border border-slate-600">
+                                            <button onclick="triggerPayment('${person.id}', '${item.id}', event)" class="bg-slate-100 hover:bg-slate-200 text-brand-600 dark:bg-slate-700 dark:hover:bg-slate-600 dark:text-brand-400 h-9 w-9 rounded-lg transition-colors flex items-center justify-center">
                                                 <i class="ph-bold ph-wallet text-lg"></i>
                                             </button>
-                                            <button onclick="triggerDeleteItem('${person.id}', '${item.id}', event)" class="bg-[#334155] hover:bg-[#475569] text-red-400 h-9 w-9 rounded-lg transition-colors flex items-center justify-center border border-slate-600">
+                                            <button onclick="triggerDeleteItem('${person.id}', '${item.id}', event)" class="bg-slate-100 hover:bg-slate-200 text-red-500 dark:bg-slate-700 dark:hover:bg-slate-600 dark:text-red-400 h-9 w-9 rounded-lg transition-colors flex items-center justify-center">
                                                 <i class="ph-bold ph-trash text-lg"></i>
                                             </button>
                                         </div>
@@ -768,10 +894,21 @@
                         `;
                         }).join('') + `</div>`;
 
+                    const notesHtml = person.notes 
+                        ? `<div class="text-[11px] text-slate-500 dark:text-slate-400 mt-1 flex items-center justify-between gap-2 bg-slate-50 dark:bg-slate-900/50 p-1.5 rounded-lg border border-slate-100 dark:border-slate-800">
+                               <div class="flex items-center gap-1 overflow-hidden">
+                                   <i class="ph-fill ph-note text-slate-400 shrink-0"></i> 
+                                   <span class="truncate">${person.notes}</span>
+                               </div>
+                               <button onclick="copyNotes('${person.id}', event)" class="shrink-0 bg-slate-200 hover:bg-slate-300 dark:bg-slate-700 dark:hover:bg-slate-600 p-1 rounded transition-colors text-slate-600 dark:text-slate-300 flex items-center justify-center" title="Salin Catatan">
+                                   <i class="ph-bold ph-copy"></i>
+                               </button>
+                           </div>` 
+                        : '';
+
                     const card = document.createElement('div');
                     card.className = "bg-white dark:bg-slate-800 rounded-3xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden";
                     card.innerHTML = `
-                        <!-- Header Accordion -->
                         <div onclick="toggleAccordion('${person.id}')" class="p-4 relative cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/80 transition-colors select-none">
                             <div class="flex justify-between items-start z-10 relative">
                                 <div class="flex items-center gap-3">
@@ -788,16 +925,15 @@
                                 </div>
                                 <div class="flex flex-col items-end gap-1">
                                     <div class="text-right">
-                                        <div class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Sisa</div>
+                                        <div class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">SISA</div>
                                         <div class="font-black text-red-500 dark:text-red-400 text-[15px] tracking-tight">${formatNumber(personTotalDebt)}</div>
                                     </div>
                                     <div class="text-slate-300 dark:text-slate-500 transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}">
-                                        <i class="ph-bold ph-caret-down text-lg"></i>
+                                        <i class="ph-bold ph-caret-up text-lg"></i>
                                     </div>
                                 </div>
                             </div>
                             
-                            <!-- Progress bar -->
                             ${personTotalOriginal > 0 ? `
                                 <div class="absolute bottom-0 left-0 right-0 h-1 bg-slate-100 dark:bg-slate-700">
                                     <div class="h-full bg-emerald-500 progress-striped transition-all duration-700" style="width: ${progressPercent}%"></div>
@@ -805,29 +941,29 @@
                             ` : ''}
                         </div>
                         
-                        <!-- Content Accordion -->
-                        <div class="accordion-content ${isExpanded ? 'expanded border-t border-slate-100 dark:border-slate-700 bg-[#0f172a] dark:bg-[#0f172a]' : ''}">
-                            <div class="p-4 pt-5 pb-2">
-                                <div class="flex justify-between items-center mb-4">
-                                    <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Daftar Tagihan</span>
-                                    <button onclick="triggerAddItem('${person.id}', '${person.name}', event)" class="bg-brand-600/20 text-brand-400 hover:bg-brand-600/40 px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1 transition-colors border border-brand-500/30">
+                        <div class="accordion-content ${isExpanded ? 'expanded border-t border-slate-100 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/40' : ''}">
+                            <div class="p-4 pt-4 pb-2">
+                                ${notesHtml}
+                                <div class="flex justify-between items-center my-4">
+                                    <span class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Daftar Tagihan</span>
+                                    <button onclick="triggerAddItem('${person.id}', '${person.name}', event)" class="bg-slate-100 text-brand-700 dark:bg-slate-800 dark:text-brand-400 hover:bg-slate-200 dark:hover:bg-slate-700 px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1 transition-colors border border-slate-200 dark:border-slate-700">
                                         <i class="ph-bold ph-plus"></i> Bon Baru
                                     </button>
                                 </div>
                                 ${itemsHtml}
                             </div>
                             
-                            <div class="p-4 flex gap-2 border-t border-slate-800 bg-[#0f172a] dark:bg-[#0f172a]">
-                                <button onclick="paySelectedItems('${person.id}', event)" ${selectedIds.length === 0 ? 'disabled' : ''} class="flex-1 bg-emerald-900/40 text-emerald-400 border border-emerald-500/30 disabled:opacity-40 disabled:bg-slate-800 disabled:text-slate-500 disabled:border-slate-700 py-3 rounded-xl text-sm font-bold flex flex-col items-center justify-center transition-all">
+                            <div class="p-4 flex gap-2 border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-800">
+                                <button onclick="paySelectedItems('${person.id}', event)" ${selectedIds.length === 0 ? 'disabled' : ''} class="flex-1 bg-slate-100 text-slate-400 dark:bg-slate-900/50 dark:text-slate-500 border border-slate-200 dark:border-slate-700 disabled:opacity-50 hover:bg-emerald-50 hover:text-emerald-700 dark:hover:bg-emerald-900/30 dark:hover:text-emerald-400 hover:border-emerald-200 dark:hover:border-emerald-800 py-3 rounded-xl text-sm font-bold flex flex-col items-center justify-center transition-all">
                                     <span class="flex items-center gap-1"><i class="ph-bold ph-check-square-offset"></i> Lunas Terpilih</span>
                                 </button>
-                                <button onclick="shareWhatsApp('${person.id}', event)" ${person.items.length === 0 ? 'disabled' : ''} class="w-[30%] bg-[#25D366] hover:bg-[#128C7E] text-white disabled:opacity-40 py-3 rounded-xl text-sm font-bold flex flex-col items-center justify-center transition-all shadow-md">
+                                <button onclick="shareWhatsApp('${person.id}', event)" ${person.items.length === 0 ? 'disabled' : ''} class="w-[30%] bg-[#1c8449] hover:bg-[#126b38] text-white disabled:opacity-40 py-3 rounded-xl text-sm font-bold flex flex-col items-center justify-center transition-all shadow-sm">
                                     <i class="ph-bold ph-whatsapp-logo text-xl"></i>
                                 </button>
                             </div>
                         </div>
                     `;
-                    activeContainer.appendChild(card);
+                    container.appendChild(card);
                 });
             }
 
@@ -838,11 +974,11 @@
         function updateHistoryFilters() {
             const filter = document.getElementById('historyFilter');
             const currentVal = filter.value;
-            filter.innerHTML = `<option value="all">Semua Riwayat Transaksi</option>`;
+            filter.innerHTML = `<option value="all" class="text-slate-800 bg-white dark:bg-slate-700 dark:text-white">Semua Riwayat Transaksi</option>`;
             
             const uniqueNames = [...new Set(appData.history.map(item => item.personName))];
             uniqueNames.forEach(name => {
-                filter.innerHTML += `<option value="${name}">${name}</option>`;
+                filter.innerHTML += `<option value="${name}" class="text-slate-800 bg-white dark:bg-slate-700 dark:text-white">${name}</option>`;
             });
             if(uniqueNames.includes(currentVal)) filter.value = currentVal;
         }
@@ -853,9 +989,7 @@
             container.innerHTML = '';
             
             let filtered = appData.history;
-            if (filterVal !== 'all') {
-                filtered = appData.history.filter(h => h.personName === filterVal);
-            }
+            if (filterVal !== 'all') filtered = appData.history.filter(h => h.personName === filterVal);
 
             if (filtered.length === 0) {
                 container.innerHTML = `<div class="text-center p-6 text-slate-400 italic text-sm border border-dashed border-slate-300 dark:border-slate-700 rounded-2xl">Belum ada riwayat transaksi.</div>`;
@@ -864,34 +998,40 @@
 
             filtered.forEach(history => {
                 const isFull = history.type === 'full';
-                const itemsDesc = history.items.map(i => `${i.name} (${formatNumber(i.paidAmount)})`).join(', ');
+                const itemsDesc = history.items.map(i => `${i.name} (${formatNumber(i.paidAmount)})`).join('<br>');
+                const isNgutangin = history.sourceList === 'ngutangin';
                 
-                // Indikator Kembalian jika ada
                 const changeHtml = history.changeAmount > 0 
-                    ? `<div class="mt-1 text-[10px] font-bold text-orange-500 bg-orange-50 dark:bg-orange-900/30 px-2 py-1 rounded inline-block">Ada Kembalian: ${formatRupiah(history.changeAmount)}</div>`
+                    ? `<div class="mt-1 text-[10px] font-bold text-orange-600 dark:text-orange-500 bg-orange-50 dark:bg-orange-900/30 px-2 py-1 rounded inline-block">Ada Kembalian: ${formatRupiah(history.changeAmount)}</div>`
                     : '';
+                    
+                const sourceTitle = isNgutangin ? 'UANG DITERIMA' : 'UANG KELUAR';
+                const sign = isNgutangin ? '+' : '-';
+                const colorTheme = isNgutangin ? 'emerald' : 'red';
 
                 container.innerHTML += `
-                    <div class="bg-white dark:bg-slate-800 rounded-2xl p-4 border-l-4 ${isFull ? 'border-emerald-500' : 'border-brand-500'} shadow-sm opacity-95">
-                        <div class="flex justify-between items-start mb-2">
+                    <div class="bg-white dark:bg-slate-800 rounded-2xl p-4 border-l-4 border-${colorTheme}-500 shadow-sm transition-colors duration-300 relative overflow-hidden">
+                        <div class="flex justify-between items-start mb-3">
                             <div class="font-bold text-slate-700 dark:text-slate-200 flex items-center gap-2">
-                                ${isFull ? '<i class="ph-fill ph-check-circle text-emerald-500 text-lg"></i>' : '<i class="ph-fill ph-clock-counter-clockwise text-brand-500 text-lg"></i>'}
-                                <span>${history.personName} <span class="text-[10px] font-normal text-slate-400 bg-slate-100 dark:bg-slate-700 px-1.5 py-0.5 rounded ml-1">${isFull ? 'Lunas' : 'Cicilan'}</span></span>
+                                ${isFull ? '<div class="bg-emerald-100 text-emerald-600 dark:bg-emerald-900/40 dark:text-emerald-400 p-1 rounded-full"><i class="ph-fill ph-check-circle text-lg"></i></div>' : '<div class="bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-400 p-1 rounded-full"><i class="ph-bold ph-clock-counter-clockwise text-lg"></i></div>'}
+                                <span>${history.personName} <span class="text-[9px] uppercase font-bold text-slate-500 bg-slate-100 dark:bg-slate-700 px-1.5 py-0.5 rounded ml-1">${isFull ? 'Lunas' : 'Cicilan'}</span></span>
                             </div>
                             <div class="text-right">
-                                <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">${history.date}</div>
+                                <div class="text-[10px] font-bold text-slate-400 tracking-wider">${history.date}</div>
                                 <div class="text-xs text-slate-500">${history.time}</div>
                             </div>
                         </div>
-                        <div class="text-xs text-slate-500 dark:text-slate-400 mb-2 leading-relaxed border-b border-slate-100 dark:border-slate-700 pb-2">
+                        <div class="text-xs text-slate-600 dark:text-slate-400 mb-3 leading-relaxed border-b border-slate-100 dark:border-slate-700 pb-3">
                             ${itemsDesc}
                         </div>
                         <div class="flex justify-between items-end">
                             <div class="flex flex-col">
-                                <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Uang Diterima</span>
+                                <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">${sourceTitle}</span>
                                 ${changeHtml}
                             </div>
-                            <span class="font-black text-emerald-600 dark:text-emerald-400 text-lg tracking-tight">+ ${formatRupiah(history.totalAmount)}</span>
+                            <span class="font-black text-${colorTheme}-600 dark:text-${colorTheme}-400 text-lg tracking-tight">
+                                ${sign} ${formatRupiah(history.totalAmount)}
+                            </span>
                         </div>
                     </div>
                 `;
@@ -904,7 +1044,7 @@
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = `Backup_NgutangPro_${new Date().toLocaleDateString('id-ID').replace(/\//g, '-')}.json`;
+            a.download = `Backup_Ngutang_${new Date().toLocaleDateString('id-ID').replace(/\//g, '-')}.json`;
             a.click();
             URL.revokeObjectURL(url);
             closeSheet('settingsSheet');
@@ -917,7 +1057,9 @@
             reader.onload = function(e) {
                 try {
                     const imported = JSON.parse(e.target.result);
-                    if (imported.active) {
+                    if (imported.ngutangin || imported.active) {
+                        if (imported.active && !imported.ngutangin) { imported.ngutangin = imported.active; delete imported.active; }
+                        if (!imported.utangSaya) imported.utangSaya = [];
                         appData = imported;
                         saveData();
                         closeSheet('settingsSheet');
@@ -929,12 +1071,12 @@
         }
 
         function triggerClearData() {
-            showConfirm("Hapus SEMUA Data?", "Semua data aktif dan riwayat akan hilang selamanya. Lanjutkan?", () => {
-                appData = { active: [], history: [] };
+            showConfirm("Hapus SEMUA Data?", "Semua data aktif dan riwayat akan hilang selamanya. Tindakan ini tidak dapat dibatalkan.", () => {
+                appData = { ngutangin: [], utangSaya: [], history: [] };
                 selectedCheckboxes = {};
                 saveData();
                 closeSheet('settingsSheet');
-            }, "Hapus Semua", "bg-red-500 hover:bg-red-600");
+            }, "Hapus Semua", "bg-red-500 hover:bg-red-600", true);
         }
 
         function toggleTheme() {
@@ -952,13 +1094,13 @@
                 metaTheme.setAttribute('content', '#1e293b'); 
             } else {
                 icon.classList.replace('ph-sun', 'ph-moon');
-                metaTheme.setAttribute('content', '#1e3a8a'); 
+                metaTheme.setAttribute('content', '#2563eb'); 
             }
         }
 
         (function setupPWA() {
             const manifest = {
-                name: "Ngutang Pro", short_name: "Ngutang Pro", start_url: ".", display: "standalone",
+                name: "Ngutang", short_name: "Ngutang", start_url: ".", display: "standalone",
                 background_color: "#f8fafc", theme_color: "#2563eb",
                 icons: [{
                     src: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 256 256'%3E%3Crect width='256' height='256' fill='none'/%3E%3Crect x='32' y='48' width='192' height='160' rx='8' fill='%232563eb'/%3E%3Cpath d='M32 104h192' fill='none' stroke='%23fff' stroke-linecap='round' stroke-linejoin='round' stroke-width='16'/%3E%3C/svg%3E",
