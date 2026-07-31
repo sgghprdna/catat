@@ -100,7 +100,7 @@
                 </div>
             </div>
             
-            <div class="mt-2 transition-all relative">
+            <div id="headerDataContainer" class="mt-2 transition-all relative">
                 <p id="headerTitle" class="text-blue-100 dark:text-slate-400 text-[10px] font-semibold mb-0.5 uppercase tracking-wider">TOTAL NGUTANGIN</p>
                 <h2 class="header-amount text-3xl font-extrabold tracking-tight truncate transition-all money-value" id="totalGlobalDebt">Rp 0</h2>
             </div>
@@ -591,20 +591,17 @@
                 document.getElementById('tab-main').classList.add('active');
                 fab.classList.remove('hidden');
                 searchSort.classList.remove('hidden');
-                document.getElementById('headerTitle').innerText = tab === 'ngutangin' ? 'TOTAL NGUTANGIN' : 'TOTAL UTANG SAYA';
                 renderUI();
             } else if (tab === 'history') {
                 document.getElementById('tab-history').classList.add('active');
                 fab.classList.add('hidden');
                 searchSort.classList.add('hidden');
-                document.getElementById('headerTitle').innerText = 'TOTAL TRANSAKSI';
                 renderHistory();
             } else if (tab === 'tool') {
                 document.getElementById('tab-tool').classList.add('active');
                 fab.classList.add('hidden');
                 searchSort.classList.add('hidden');
-                document.getElementById('headerTitle').innerText = 'ALAT BANTU';
-                document.getElementById('totalGlobalDebt').innerText = '-';
+                updateHeader();
             }
         }
 
@@ -939,27 +936,39 @@
         function calculatePersonDebt(person) { return person.items.reduce((total, i) => total + i.remainingPrice, 0); }
 
         function updateHeader() {
-            const titleEl = document.getElementById('headerTitle');
-            const amountEl = document.getElementById('totalGlobalDebt');
+            const container = document.getElementById('headerDataContainer');
+            if (!container) return;
+
+            const totalNgutangin = appData.ngutangin.reduce((sum, p) => sum + calculatePersonDebt(p), 0);
+            const totalUtangSaya = appData.utangSaya.reduce((sum, p) => sum + calculatePersonDebt(p), 0);
             
+            const displayNgutangin = settings.privacyMode ? "Rp •••••" : formatRupiah(totalNgutangin);
+            const displayUtangSaya = settings.privacyMode ? "Rp •••••" : formatRupiah(totalUtangSaya);
+
             if (currentTab === 'ngutangin') {
-                titleEl.innerText = 'TOTAL NGUTANGIN';
-                const total = appData.ngutangin.reduce((sum, p) => sum + calculatePersonDebt(p), 0);
-                amountEl.innerText = settings.privacyMode ? "Rp •••••" : formatRupiah(total);
-                amountEl.style.display = 'block';
+                container.innerHTML = `
+                    <p class="text-blue-100 dark:text-slate-400 text-[10px] font-semibold mb-0.5 uppercase tracking-wider">TOTAL NGUTANGIN</p>
+                    <h2 class="header-amount text-3xl font-extrabold tracking-tight truncate transition-all money-value">${displayNgutangin}</h2>
+                `;
             } else if (currentTab === 'utangSaya') {
-                titleEl.innerText = 'TOTAL UTANG SAYA';
-                const total = appData.utangSaya.reduce((sum, p) => sum + calculatePersonDebt(p), 0);
-                amountEl.innerText = settings.privacyMode ? "Rp •••••" : formatRupiah(total);
-                amountEl.style.display = 'block';
-            } else if (currentTab === 'history') {
-                titleEl.innerText = 'TOTAL TRANSAKSI';
-                const total = appData.history.reduce((sum, h) => sum + h.totalAmount, 0);
-                amountEl.innerText = settings.privacyMode ? "Rp •••••" : formatRupiah(total);
-                amountEl.style.display = 'block';
-            } else if (currentTab === 'tool') {
-                titleEl.innerText = 'ALAT BANTU';
-                amountEl.style.display = 'none';
+                container.innerHTML = `
+                    <p class="text-blue-100 dark:text-slate-400 text-[10px] font-semibold mb-0.5 uppercase tracking-wider">TOTAL UTANG SAYA</p>
+                    <h2 class="header-amount text-3xl font-extrabold tracking-tight truncate transition-all money-value">${displayUtangSaya}</h2>
+                `;
+            } else if (currentTab === 'history' || currentTab === 'tool') {
+                container.innerHTML = `
+                    <div class="flex justify-between items-center">
+                        <div class="flex-1">
+                            <p class="text-blue-100 dark:text-slate-400 text-[10px] font-semibold mb-0.5 uppercase tracking-wider">TOTAL NGUTANGIN</p>
+                            <h2 class="header-amount text-xl sm:text-2xl font-extrabold tracking-tight truncate transition-all money-value">${displayNgutangin}</h2>
+                        </div>
+                        <div class="w-px h-10 bg-white/20 dark:bg-slate-700 mx-2"></div>
+                        <div class="flex-1 text-right">
+                            <p class="text-blue-100 dark:text-slate-400 text-[10px] font-semibold mb-0.5 uppercase tracking-wider">TOTAL UTANG SAYA</p>
+                            <h2 class="header-amount text-xl sm:text-2xl font-extrabold tracking-tight truncate transition-all money-value text-red-200 dark:text-red-400">${displayUtangSaya}</h2>
+                        </div>
+                    </div>
+                `;
             }
         }
 
@@ -1371,39 +1380,54 @@
         }
 
         // --- Assign People Flow ---
-        function switchTab(tab) {
-            currentTab = tab;
-            settings.lastTab = tab;
-            saveSettings();
+        function openAssignSheet(itemId) {
+            activeSplitItemId = itemId;
+            const item = splitItems.find(i => i.id === itemId);
+            if(!item) return;
             
-            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-            document.querySelectorAll('button[id^="tabBtn-"]').forEach(btn => {
-                btn.className = "px-4 py-2 text-[11px] sm:text-sm font-bold rounded-lg transition-all text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200";
-            });
+            document.getElementById('assignItemName').innerText = item.name;
+            renderAssignList();
+            openSheet('assignSplitSheet');
+        }
 
-            const activeBtnClass = "px-4 py-2 text-[11px] sm:text-sm font-bold rounded-lg transition-all bg-white dark:bg-slate-700 shadow-sm text-brand-700 dark:text-blue-300";
-            const btn = document.getElementById(`tabBtn-${tab}`);
-            if(btn) btn.className = tab === 'tool' ? activeBtnClass + " flex items-center gap-1" : activeBtnClass;
+        function renderAssignList() {
+            const container = document.getElementById('assignPeopleList');
+            const item = splitItems.find(i => i.id === activeSplitItemId);
+            if(!item) return;
 
-            const fab = document.getElementById('mainFabBtn');
-            const searchSort = document.getElementById('searchSortArea');
+            // Gabungkan nama dari daftar Ngutangin dan nama sementara yang baru diinput
+            const existingNames = appData.ngutangin.map(p => p.name);
+            const allNames = [...new Set([...existingNames, ...tempSplitPeople])];
 
-            if (tab === 'ngutangin' || tab === 'utangSaya') {
-                document.getElementById('tab-main').classList.add('active');
-                fab.classList.remove('hidden');
-                searchSort.classList.remove('hidden');
-                renderUI();
-            } else if (tab === 'history') {
-                document.getElementById('tab-history').classList.add('active');
-                fab.classList.add('hidden');
-                searchSort.classList.add('hidden');
-                renderHistory();
-            } else if (tab === 'tool') {
-                document.getElementById('tab-tool').classList.add('active');
-                fab.classList.add('hidden');
-                searchSort.classList.add('hidden');
-                updateHeader();
+            if(allNames.length === 0) {
+                container.innerHTML = `<div class="text-sm text-slate-400 italic text-center py-4">Belum ada teman. Tambahkan nama di bawah.</div>`;
+                return;
             }
+
+            // Render Checkboxes
+            container.innerHTML = allNames.map(name => {
+                const isChecked = item.assignedTo.includes(name);
+                return `
+                <label class="flex items-center gap-3 p-3 bg-slate-50 dark:bg-slate-900/50 rounded-xl border border-slate-200 dark:border-slate-700 cursor-pointer hover:border-brand-300 dark:hover:border-brand-600 transition-colors">
+                    <input type="checkbox" value="${name}" class="assign-cb custom-checkbox" ${isChecked ? 'checked' : ''}>
+                    <span class="font-bold text-slate-700 dark:text-slate-200">${name}</span>
+                </label>
+                `;
+            }).join('');
+        }
+
+        function addTempPersonSplit() {
+            const input = document.getElementById('assignNewName');
+            const name = input.value.trim();
+            if(!name) return;
+            
+            // Tambahkan ke memori sementara jika belum ada
+            if(!tempSplitPeople.includes(name) && !appData.ngutangin.find(p => p.name === name)) {
+                tempSplitPeople.push(name);
+            }
+            
+            input.value = '';
+            renderAssignList(); // Segarkan daftar agar nama baru muncul
         }
 
         function saveAssignSplit() {
