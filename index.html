@@ -155,9 +155,12 @@
             <p id="addPersonSubtitle" class="text-xs text-slate-500 dark:text-slate-400 mb-5">Masuk ke daftar: Ngutangin</p>
             <form onsubmit="addPerson(event)" class="space-y-3">
                 <input type="text" id="newPersonName" placeholder="Nama Orang (contoh: Budi)" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3.5 focus:outline-none focus:ring-2 focus:ring-brand-500 text-slate-800 dark:text-slate-100 transition-all" required autocomplete="off"/>
-                <div class="relative">
+                <div class="relative flex items-center">
                     <span class="absolute left-4 top-3.5 text-slate-400"><i class="ph-fill ph-whatsapp-logo text-lg"></i></span>
-                    <input type="tel" id="newPersonPhone" placeholder="No. WA (Opsional: 0812...)" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl pl-11 pr-4 py-3.5 focus:outline-none focus:ring-2 focus:ring-brand-500 text-slate-800 dark:text-slate-100 transition-all" autocomplete="off"/>
+                    <input type="tel" id="newPersonPhone" placeholder="No. WA (Opsional: 0812...)" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl pl-11 pr-14 py-3.5 focus:outline-none focus:ring-2 focus:ring-brand-500 text-slate-800 dark:text-slate-100 transition-all" autocomplete="off"/>
+                    <button type="button" onclick="openContactPicker()" class="absolute right-2 p-1.5 bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 rounded-lg hover:bg-brand-100 hover:text-brand-600 dark:hover:bg-brand-900/50 dark:hover:text-brand-400 transition-colors flex items-center justify-center">
+                        <i class="ph-fill ph-address-book text-xl"></i>
+                    </button>
                 </div>
                 <div class="relative">
                     <span class="absolute left-4 top-3.5 text-slate-400"><i class="ph-fill ph-note text-lg"></i></span>
@@ -541,6 +544,31 @@
             getCurrentList().unshift({ id: 'p_' + Date.now().toString(), name, phone, notes, items: [] });
             document.getElementById('newPersonName').value = ''; document.getElementById('newPersonPhone').value = ''; document.getElementById('newPersonNotes').value = '';
             closeSheet('addPersonSheet'); saveData();
+        }
+
+        async function openContactPicker() {
+            if (!('contacts' in navigator && 'ContactsManager' in window)) {
+                showAlert('Tidak Didukung', 'Browser Anda tidak mendukung ambil kontak otomatis. Fitur ini hanya didukung di Google Chrome Android.', true);
+                return;
+            }
+            try {
+                const contacts = await navigator.contacts.select(['name', 'tel'], { multiple: false });
+                if (contacts && contacts.length > 0) {
+                    const contact = contacts[0];
+                    if (contact.name && contact.name.length > 0) {
+                        document.getElementById('newPersonName').value = contact.name[0];
+                    }
+                    if (contact.tel && contact.tel.length > 0) {
+                        // Bersihkan spasi/karakter aneh dan sesuaikan ke format lokal 08...
+                        let phone = contact.tel[0].replace(/[^0-9+]/g, '');
+                        if(phone.startsWith('+62')) phone = '0' + phone.substring(3);
+                        else if(phone.startsWith('62')) phone = '0' + phone.substring(2);
+                        document.getElementById('newPersonPhone').value = phone;
+                    }
+                }
+            } catch (ex) {
+                console.log('Ambil kontak dibatalkan atau error:', ex);
+            }
         }
 
         function triggerDeletePerson(personId) {
