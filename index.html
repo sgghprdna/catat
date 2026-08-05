@@ -25,7 +25,6 @@
             document.documentElement.classList.remove('dark');
         }
     </script>
-    <!-- Ikon & Confetti -->
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     
@@ -65,15 +64,6 @@
         
         /* Privacy Mode Filter */
         body.privacy-on .money-value { filter: blur(5px); opacity: 0.7; pointer-events: none; user-select: none; transition: filter 0.3s ease; }
-        
-        /* Fullscreen View transition */
-        .slide-up-view { transition: transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1); transform: translateY(100%); }
-        .slide-up-view.active { transform: translateY(0); }
-
-        /* Loader */
-        .loader-ring { display: inline-block; width: 20px; height: 20px; }
-        .loader-ring:after { content: " "; display: block; width: 16px; height: 16px; margin: 2px; border-radius: 50%; border: 2px solid #fff; border-color: #fff transparent #fff transparent; animation: loader-ring 1.2s linear infinite; }
-        @keyframes loader-ring { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
 </head>
 <body class="bg-slate-100 dark:bg-slate-900 text-slate-800 dark:text-slate-100 font-sans pb-28 min-h-screen relative transition-colors duration-300">
@@ -89,7 +79,7 @@
                 </div>
                 <div class="flex items-center gap-1">
                     <button onclick="togglePrivacyMode()" class="p-2 hover:bg-white/10 rounded-lg transition-colors">
-                        <i id="privacyIcon" class="ph-bold ph-eye text-xl sm:text-2xl"></i>
+                        <i id="privacyIcon" class="ph-bold ph-eye-closed text-xl sm:text-2xl"></i>
                     </button>
                     <button onclick="toggleTheme()" class="p-2 hover:bg-white/10 rounded-lg transition-colors">
                         <i id="themeIcon" class="ph-fill ph-moon text-xl sm:text-2xl"></i>
@@ -101,18 +91,16 @@
             </div>
             
             <div id="headerDataContainer" class="mt-2 transition-all relative">
-                <p id="headerTitle" class="text-blue-100 dark:text-slate-400 text-[10px] font-semibold mb-0.5 uppercase tracking-wider">TOTAL NGUTANGIN</p>
-                <h2 class="header-amount text-3xl font-extrabold tracking-tight truncate transition-all money-value" id="totalGlobalDebt">Rp 0</h2>
+                <!-- Diisi otomatis oleh JavaScript -->
             </div>
         </div>
     </header>
 
     <div class="max-w-md mx-auto px-4 mt-6 mb-3 overflow-x-auto no-scrollbar">
         <div class="flex bg-slate-200/70 dark:bg-slate-800 p-1.5 rounded-xl shadow-inner transition-colors duration-300 min-w-max gap-1">
-            <button onclick="switchTab('ngutangin')" id="tabBtn-ngutangin" class="px-4 py-2 text-[11px] sm:text-sm font-bold rounded-lg transition-all">Ngutangin</button>
-            <button onclick="switchTab('utangSaya')" id="tabBtn-utangSaya" class="px-4 py-2 text-[11px] sm:text-sm font-bold rounded-lg transition-all">Utang Saya</button>
-            <button onclick="switchTab('history')" id="tabBtn-history" class="px-4 py-2 text-[11px] sm:text-sm font-bold rounded-lg transition-all">Riwayat</button>
-            <button onclick="switchTab('tool')" id="tabBtn-tool" class="px-4 py-2 text-[11px] sm:text-sm font-bold rounded-lg transition-all flex items-center gap-1"><i class="ph-bold ph-wrench"></i> Tool</button>
+            <button onclick="switchTab('ngutangin')" id="tabBtn-ngutangin" class="px-4 py-2 text-[11px] sm:text-sm font-bold rounded-lg transition-all flex-1">Ngutangin</button>
+            <button onclick="switchTab('utangSaya')" id="tabBtn-utangSaya" class="px-4 py-2 text-[11px] sm:text-sm font-bold rounded-lg transition-all flex-1">Utang Saya</button>
+            <button onclick="switchTab('history')" id="tabBtn-history" class="px-4 py-2 text-[11px] sm:text-sm font-bold rounded-lg transition-all flex-1">Riwayat</button>
         </div>
     </div>
 
@@ -150,22 +138,6 @@
                 </button>
             </div>
             <div id="historyList" class="space-y-4"></div>
-        </div>
-
-        <!-- Tab: Tool -->
-        <div id="tab-tool" class="tab-content space-y-4">
-            <div onclick="openSplitBill()" class="bg-white dark:bg-slate-800 rounded-3xl p-5 border border-slate-200 dark:border-slate-700 shadow-sm flex items-center justify-between cursor-pointer hover:border-brand-400 transition-all group">
-                <div class="flex items-center gap-4">
-                    <div class="w-14 h-14 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-lg text-white group-hover:scale-105 transition-transform">
-                        <i class="ph-bold ph-receipt text-2xl"></i>
-                    </div>
-                    <div>
-                        <h3 class="font-bold text-lg text-slate-800 dark:text-white leading-tight">AI Split Bill</h3>
-                        <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Bagi bon struk dengan teman</p>
-                    </div>
-                </div>
-                <i class="ph-bold ph-caret-right text-slate-300 dark:text-slate-600"></i>
-            </div>
         </div>
     </main>
 
@@ -206,7 +178,6 @@
             
             <div class="flex-1 overflow-y-auto no-scrollbar pb-4 space-y-4">
                 <input type="hidden" id="addItemPersonId">
-                <!-- Meta Global (Tanggal Bon & Jatuh Tempo) -->
                 <div class="flex gap-3">
                     <div class="relative flex-1">
                         <span class="absolute left-3 top-3.5 text-slate-400"><i class="ph-fill ph-calendar-blank"></i> Tgl Bon</span>
@@ -220,9 +191,8 @@
 
                 <div class="w-full h-px bg-slate-200 dark:bg-slate-700"></div>
                 
-                <!-- Container Multiple Items -->
                 <div id="bulkItemsContainer" class="space-y-3">
-                    <!-- Dinamis terisi dari JS -->
+                    <!-- Dinamis -->
                 </div>
 
                 <button type="button" onclick="addBulkItemRow()" class="w-full py-3 bg-slate-100 dark:bg-slate-900 border border-dashed border-slate-300 dark:border-slate-700 rounded-xl text-slate-600 dark:text-slate-400 font-bold text-sm hover:bg-slate-200 transition-colors flex items-center justify-center gap-2">
@@ -283,14 +253,6 @@
             <h3 class="text-xl font-bold text-slate-800 dark:text-slate-100 mb-5">Pengaturan</h3>
             
             <div class="space-y-3">
-                <button onclick="togglePINSetup()" class="w-full flex items-center justify-between gap-4 p-4 bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-2xl hover:bg-slate-100 transition-colors">
-                    <div class="flex items-center gap-4 text-slate-700 dark:text-slate-200">
-                        <i class="ph-fill ph-lock-key text-3xl"></i>
-                        <div class="text-left"><div class="font-bold">Kunci Aplikasi (PIN)</div><div id="pinStatusText" class="text-xs opacity-80 mt-0.5">Mati</div></div>
-                    </div>
-                    <i class="ph-bold ph-caret-right text-slate-400"></i>
-                </button>
-
                 <button id="installBtn" class="hidden w-full flex items-center gap-4 p-4 bg-purple-50 dark:bg-purple-900/30 border border-purple-100 dark:border-purple-800 rounded-2xl text-purple-700 dark:text-purple-400 hover:bg-purple-100 text-left transition-colors">
                     <i class="ph-fill ph-download text-3xl"></i>
                     <div><div class="font-bold">Instal Aplikasi</div><div class="text-xs opacity-80 mt-0.5">Tambahkan ke layar utama HP</div></div>
@@ -315,156 +277,6 @@
         </div>
     </div>
 
-    
-    <!-- PIN Setup / Unlock Modal (Fullscreen Overlay) -->
-    <div id="pinOverlay" class="fixed inset-0 bg-slate-100 dark:bg-slate-900 z-[999] hidden flex flex-col items-center justify-center transition-opacity duration-300">
-        <div class="text-center w-full max-w-sm px-6">
-            <div class="w-16 h-16 bg-brand-100 dark:bg-brand-900/30 rounded-full flex items-center justify-center mx-auto mb-4 text-brand-600 dark:text-brand-400">
-                <i class="ph-fill ph-lock-key text-3xl"></i>
-            </div>
-            <h2 id="pinTitle" class="text-2xl font-bold text-slate-800 dark:text-white mb-2">Masukkan PIN</h2>
-            <p id="pinSubtitle" class="text-sm text-slate-500 mb-8">Masukkan 4 digit PIN Anda.</p>
-            
-            <div class="flex justify-center gap-4 mb-10">
-                <div class="w-4 h-4 rounded-full bg-slate-300 dark:bg-slate-700 pin-dot transition-all"></div>
-                <div class="w-4 h-4 rounded-full bg-slate-300 dark:bg-slate-700 pin-dot transition-all"></div>
-                <div class="w-4 h-4 rounded-full bg-slate-300 dark:bg-slate-700 pin-dot transition-all"></div>
-                <div class="w-4 h-4 rounded-full bg-slate-300 dark:bg-slate-700 pin-dot transition-all"></div>
-            </div>
-
-            <div class="grid grid-cols-3 gap-4 max-w-[260px] mx-auto">
-                <!-- Generates numbers 1-9 via JS for simplicity, but written here for layout -->
-                <button onclick="pressPin('1')" class="w-16 h-16 rounded-full bg-white dark:bg-slate-800 shadow-sm border border-slate-200 dark:border-slate-700 text-2xl font-bold text-slate-800 dark:text-white active:bg-slate-200 mx-auto">1</button>
-                <button onclick="pressPin('2')" class="w-16 h-16 rounded-full bg-white dark:bg-slate-800 shadow-sm border border-slate-200 dark:border-slate-700 text-2xl font-bold text-slate-800 dark:text-white active:bg-slate-200 mx-auto">2</button>
-                <button onclick="pressPin('3')" class="w-16 h-16 rounded-full bg-white dark:bg-slate-800 shadow-sm border border-slate-200 dark:border-slate-700 text-2xl font-bold text-slate-800 dark:text-white active:bg-slate-200 mx-auto">3</button>
-                <button onclick="pressPin('4')" class="w-16 h-16 rounded-full bg-white dark:bg-slate-800 shadow-sm border border-slate-200 dark:border-slate-700 text-2xl font-bold text-slate-800 dark:text-white active:bg-slate-200 mx-auto">4</button>
-                <button onclick="pressPin('5')" class="w-16 h-16 rounded-full bg-white dark:bg-slate-800 shadow-sm border border-slate-200 dark:border-slate-700 text-2xl font-bold text-slate-800 dark:text-white active:bg-slate-200 mx-auto">5</button>
-                <button onclick="pressPin('6')" class="w-16 h-16 rounded-full bg-white dark:bg-slate-800 shadow-sm border border-slate-200 dark:border-slate-700 text-2xl font-bold text-slate-800 dark:text-white active:bg-slate-200 mx-auto">6</button>
-                <button onclick="pressPin('7')" class="w-16 h-16 rounded-full bg-white dark:bg-slate-800 shadow-sm border border-slate-200 dark:border-slate-700 text-2xl font-bold text-slate-800 dark:text-white active:bg-slate-200 mx-auto">7</button>
-                <button onclick="pressPin('8')" class="w-16 h-16 rounded-full bg-white dark:bg-slate-800 shadow-sm border border-slate-200 dark:border-slate-700 text-2xl font-bold text-slate-800 dark:text-white active:bg-slate-200 mx-auto">8</button>
-                <button onclick="pressPin('9')" class="w-16 h-16 rounded-full bg-white dark:bg-slate-800 shadow-sm border border-slate-200 dark:border-slate-700 text-2xl font-bold text-slate-800 dark:text-white active:bg-slate-200 mx-auto">9</button>
-                
-                <button id="pinCancelBtn" onclick="cancelPinSetup()" class="w-16 h-16 rounded-full text-slate-400 font-bold mx-auto flex items-center justify-center invisible">Batal</button>
-                <button onclick="pressPin('0')" class="w-16 h-16 rounded-full bg-white dark:bg-slate-800 shadow-sm border border-slate-200 dark:border-slate-700 text-2xl font-bold text-slate-800 dark:text-white active:bg-slate-200 mx-auto">0</button>
-                <button onclick="deletePin()" class="w-16 h-16 rounded-full text-slate-500 mx-auto flex items-center justify-center text-2xl"><i class="ph-bold ph-backspace"></i></button>
-            </div>
-            
-            <button id="pinRemoveBtn" onclick="removePin()" class="mt-8 text-red-500 font-bold text-sm hidden">Matikan Kunci PIN</button>
-        </div>
-    </div>
-
-    <!-- UI: Split Bill Full View -->
-    <div id="splitBillView" class="fixed inset-0 bg-slate-100 dark:bg-slate-900 z-[60] flex flex-col slide-up-view sm:max-w-md sm:mx-auto sm:border-x sm:border-slate-200 dark:sm:border-slate-700">
-        <header class="bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 p-4 flex items-center justify-between shrink-0">
-            <button onclick="closeSplitBill()" class="p-2 -ml-2 rounded-lg text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700">
-                <i class="ph-bold ph-x text-xl"></i>
-            </button>
-            <h2 class="font-bold text-lg text-slate-800 dark:text-white">AI Split Bill</h2>
-            <button onclick="openSplitSettings()" class="p-2 -mr-2 rounded-lg text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700">
-                <i class="ph-bold ph-gear text-xl"></i>
-            </button>
-        </header>
-        
-        <div class="flex-1 overflow-y-auto p-4 no-scrollbar">
-            <!-- Alert No API -->
-            <div id="apiAlert" class="bg-orange-50 dark:bg-orange-900/30 border border-orange-200 dark:border-orange-800 rounded-xl p-3 mb-4 flex gap-3 text-sm hidden">
-                <i class="ph-fill ph-warning-circle text-orange-500 text-xl shrink-0"></i>
-                <div class="text-orange-700 dark:text-orange-300">
-                    Fitur Scan Struk AI tidak aktif. Klik ikon <i class="ph-bold ph-gear inline"></i> di atas untuk memasukkan API Key Gemini.
-                </div>
-            </div>
-
-            <!-- Add Buttons -->
-            <div class="grid grid-cols-2 gap-3 mb-6">
-                <label class="bg-indigo-50 dark:bg-indigo-900/30 border border-indigo-200 dark:border-indigo-800 rounded-2xl p-4 flex flex-col items-center justify-center text-indigo-700 dark:text-indigo-400 cursor-pointer hover:bg-indigo-100 transition-colors text-center shadow-sm relative" id="btnScanImage">
-                    <i class="ph-bold ph-camera text-3xl mb-2"></i>
-                    <span class="font-bold text-sm">Scan Struk</span>
-                    <input type="file" accept="image/*" id="receiptInput" class="hidden" onchange="processReceipt(event)">
-                </label>
-                <button onclick="addManualSplitItem()" class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl p-4 flex flex-col items-center justify-center text-slate-700 dark:text-slate-300 hover:bg-slate-50 transition-colors text-center shadow-sm">
-                    <i class="ph-bold ph-pencil-simple text-3xl mb-2"></i>
-                    <span class="font-bold text-sm">Input Manual</span>
-                </button>
-            </div>
-
-            <!-- List of Split Items -->
-            <h3 class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Daftar Barang (Klik untuk pilih orang)</h3>
-            <div id="splitItemsList" class="space-y-3 pb-20">
-                <div class="text-center p-8 text-slate-400 border border-dashed border-slate-300 dark:border-slate-700 rounded-2xl text-sm italic">
-                    Belum ada barang ditambahkan.
-                </div>
-            </div>
-        </div>
-        
-        <div class="shrink-0 p-4 bg-white dark:bg-slate-800 border-t border-slate-200 dark:border-slate-700 shadow-[0_-4px_10px_rgba(0,0,0,0.05)]">
-            <button id="btnFinishSplit" onclick="finalizeSplitBill()" class="w-full bg-brand-600 hover:bg-brand-700 text-white font-bold py-3.5 rounded-xl shadow-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
-                Hitung & Simpan Tagihan
-            </button>
-        </div>
-        
-        <!-- Loading Overlay for AI -->
-        <div id="aiLoading" class="absolute inset-0 bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm z-50 flex flex-col items-center justify-center hidden">
-            <div class="loader-ring border-brand-500 !border-t-brand-500/30 w-12 h-12"></div>
-            <p class="mt-4 font-bold text-slate-700 dark:text-slate-200">AI sedang membaca struk...</p>
-        </div>
-    </div>
-
-    <!-- Sheet: Assign People for Split Bill -->
-    <div id="assignSplitSheet" class="fixed inset-0 z-[70] flex items-end justify-center hidden-sheet">
-        <div class="bottom-sheet-overlay absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onclick="closeSheet('assignSplitSheet')"></div>
-        <div class="bottom-sheet-content relative w-full max-w-md bg-white dark:bg-slate-800 rounded-t-3xl p-6 shadow-2xl transition-colors duration-300 max-h-[85vh] flex flex-col">
-            <div class="w-12 h-1.5 bg-slate-200 dark:bg-slate-700 rounded-full mx-auto mb-4 shrink-0"></div>
-            <h3 class="text-lg font-bold text-slate-800 dark:text-white mb-1">Siapa yang patungan?</h3>
-            <p id="assignItemName" class="text-brand-600 dark:text-brand-400 font-bold mb-4 shrink-0 border-b border-slate-100 dark:border-slate-700 pb-2">Item</p>
-            
-            <div class="flex-1 overflow-y-auto no-scrollbar space-y-2 mb-4" id="assignPeopleList">
-                <!-- Checkboxes populated via JS -->
-            </div>
-            
-            <div class="shrink-0 flex gap-2">
-                <input type="text" id="assignNewName" placeholder="Tambah nama baru..." class="flex-1 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-3 text-sm focus:ring-2 focus:ring-brand-500 text-slate-800 dark:text-slate-100" autocomplete="off">
-                <button type="button" onclick="addTempPersonSplit()" class="bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 px-4 rounded-xl font-bold text-sm"><i class="ph-bold ph-plus"></i></button>
-            </div>
-            <button onclick="saveAssignSplit()" class="w-full bg-brand-600 text-white font-bold py-3.5 rounded-xl mt-4">Selesai Memilih</button>
-        </div>
-    </div>
-
-    <!-- Sheet: Split Bill API Settings -->
-    <div id="splitSettingsSheet" class="fixed inset-0 z-[70] flex items-end justify-center hidden-sheet">
-        <div class="bottom-sheet-overlay absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onclick="closeSheet('splitSettingsSheet')"></div>
-        <div class="bottom-sheet-content relative w-full max-w-md bg-white dark:bg-slate-800 rounded-t-3xl p-6 shadow-2xl transition-colors duration-300">
-            <div class="w-12 h-1.5 bg-slate-200 dark:bg-slate-700 rounded-full mx-auto mb-4"></div>
-            <h3 class="text-xl font-bold text-slate-800 dark:text-white mb-4"><i class="ph-fill ph-gear"></i> Pengaturan AI</h3>
-            
-            <div class="space-y-4">
-                <div>
-                    <label class="block text-xs font-bold text-slate-500 mb-1">Gemini API Key</label>
-                    <input type="password" id="apiKeyInput" placeholder="AIzaSy..." class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-3 text-sm focus:ring-2 focus:ring-brand-500 text-slate-800 dark:text-slate-100 font-mono">
-                    <p class="text-[10px] text-slate-400 mt-1">Key tersimpan aman di browser Anda.</p>
-                </div>
-                <div>
-                    <label class="block text-xs font-bold text-slate-500 mb-1">Model AI</label>
-                    <select id="apiModelSelect" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-3 text-sm focus:ring-2 focus:ring-brand-500 text-slate-800 dark:text-slate-100">
-                        <option value="gemini-3.5-flash-lite">Gemini 3.5 Flash Lite (Utama, Cepat)</option>
-                        <option value="gemini-3.5-flash">Gemini 3.5 Flash (Untuk struk pudar)</option>
-                        <option value="gemini-3.1-pro-preview">Gemini 2.5 Pro / 3.1 Pro (Overkill)</option>
-                    </select>
-                </div>
-                <div class="flex gap-2 pt-2">
-                    <button onclick="testApiKey()" class="flex-1 bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-200 font-bold py-3 rounded-xl text-sm border border-slate-200 dark:border-slate-600 transition-colors hover:bg-slate-200">
-                        Test API Key
-                    </button>
-                    <button onclick="saveApiSettings()" class="flex-1 bg-brand-600 text-white font-bold py-3 rounded-xl text-sm transition-colors hover:bg-brand-700">
-                        Simpan
-                    </button>
-                </div>
-                <div id="testApiResult" class="text-xs font-bold text-center mt-2 h-4"></div>
-            </div>
-        </div>
-    </div>
-
-
-    <!-- Dialog Kustom Umum -->
     <div id="customDialogOverlay" class="fixed inset-0 bg-slate-900/70 z-[100] hidden flex items-center justify-center p-4 backdrop-blur-sm opacity-0 transition-opacity">
         <div id="customDialogBox" class="bg-white dark:bg-slate-800 w-full max-w-sm rounded-3xl p-6 shadow-2xl transform scale-95 transition-all duration-300">
             <h3 id="dialogTitle" class="text-xl font-bold text-slate-800 dark:text-white mb-2">Konfirmasi</h3>
@@ -477,32 +289,25 @@
     </div>
 
     <script>
-        // --- Core State & Variables ---
         const defaultData = { ngutangin: [], utangSaya: [], history: [] };
         let appData = defaultData;
         
-        const defaultSettings = { pin: null, lastTab: 'ngutangin', apiKey: '', aiModel: 'gemini-3.5-flash-lite', privacyMode: false };
+        // Privacy mode on by default
+        const defaultSettings = { lastTab: 'ngutangin', privacyMode: true };
         let settings = defaultSettings;
 
         let expandedPersonId = null;
         let selectedCheckboxes = {}; 
         let currentTab = 'ngutangin';
+        
+        let privacyTimer;
+        const PRIVACY_TIMEOUT = 20000; // 20 seconds inactivity
 
-        // Split Bill State
-        let splitItems = []; 
-        let activeSplitItemId = null;
-        let tempSplitPeople = []; 
-
-        // PIN State
-        let pinMode = 'check'; // check, setup, confirm, remove
-        let enteredPin = '';
-        let tempPin = '';
-
-        // --- Helpers ---
-        const formatRupiah = (num) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(num);
-        const formatNumber = (num) => new Intl.NumberFormat('id-ID').format(num);
-        const getRawNumber = (str) => parseInt(str.toString().replace(/[^0-9]/g, '')) || 0;
+        const formatRupiah = (num) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(num || 0);
+        const formatNumber = (num) => new Intl.NumberFormat('id-ID').format(num || 0);
+        const getRawNumber = (str) => parseInt(str.toString().replace(/[^0-9-]/g, '')) || 0;
         const getTodayDate = () => new Date().toISOString().split('T')[0];
+        const getShortDate = (dString) => { const d = new Date(dString); return `${d.getDate()}/${d.getMonth() + 1}`; };
         
         function formatPriceInput(input) {
             let val = input.value.replace(/[^0-9]/g, '');
@@ -518,7 +323,6 @@
             if (typeof confetti === 'function') confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 }, colors: ['#2563eb', '#10b981', '#f59e0b', '#ef4444', '#a855f7'] });
         }
 
-        // Generate Avatar Color based on Name
         function getAvatarColor(name) {
             const colors = [
                 'from-blue-400 to-blue-600 text-white', 'from-emerald-400 to-emerald-600 text-white',
@@ -531,15 +335,13 @@
             return colors[Math.abs(hash) % colors.length];
         }
 
-        // --- Data Layer ---
         function loadData() {
             try {
-                const stored = localStorage.getItem('ngutangDataV2');
+                const stored = localStorage.getItem('ngutangDataV3');
                 if (stored) {
                     appData = JSON.parse(stored);
                 } else {
-                    // Migrasi dari versi lama jika ada
-                    const oldStored = localStorage.getItem('ngutangData');
+                    const oldStored = localStorage.getItem('ngutangDataV2') || localStorage.getItem('ngutangData');
                     if (oldStored) {
                         const oldApp = JSON.parse(oldStored);
                         appData.ngutangin = oldApp.ngutangin || oldApp.active || [];
@@ -547,23 +349,63 @@
                         appData.history = oldApp.history || [];
                     }
                 }
-                
                 const storedSettings = localStorage.getItem('ngutangSettings');
                 if (storedSettings) settings = {...defaultSettings, ...JSON.parse(storedSettings)};
-                
+                // Ensure default true for privacy on load
+                if (!('privacyMode' in (JSON.parse(storedSettings || '{}')))) settings.privacyMode = true;
             } catch (e) { appData = defaultData; }
         }
 
         function saveData() {
-            localStorage.setItem('ngutangDataV2', JSON.stringify(appData));
-            if (currentTab === 'history') renderHistory(); else if (currentTab !== 'tool') renderUI();
+            localStorage.setItem('ngutangDataV3', JSON.stringify(appData));
+            if (currentTab === 'history') renderHistory(); else renderUI();
         }
 
         function saveSettings() {
             localStorage.setItem('ngutangSettings', JSON.stringify(settings));
         }
 
-        // --- UI Interactions ---
+        function resetPrivacyTimer() {
+            clearTimeout(privacyTimer);
+            // Only start timer if privacy mode is currently off (eye open)
+            if (!settings.privacyMode) {
+                privacyTimer = setTimeout(() => {
+                    if (!settings.privacyMode) {
+                        togglePrivacyMode(true); // Force it on after timeout
+                    }
+                }, PRIVACY_TIMEOUT);
+            }
+        }
+
+        function togglePrivacyMode(forceState = null) {
+            if (forceState !== null) {
+                settings.privacyMode = forceState;
+            } else {
+                settings.privacyMode = !settings.privacyMode;
+            }
+            saveSettings();
+            
+            const icon = document.getElementById('privacyIcon');
+            if(settings.privacyMode) { 
+                document.body.classList.add('privacy-on'); 
+                icon.classList.replace('ph-eye', 'ph-eye-closed'); 
+                clearTimeout(privacyTimer); // Stop timer when closed
+            } else { 
+                document.body.classList.remove('privacy-on'); 
+                icon.classList.replace('ph-eye-closed', 'ph-eye'); 
+                resetPrivacyTimer(); // Start timer when opened
+            }
+            
+            if (currentTab === 'ngutangin' || currentTab === 'utangSaya') { renderUI(); }
+            else if (currentTab === 'history') { renderHistory(); }
+            else { updateHeader(); }
+        }
+
+        // Listen for user activity to reset the timer
+        ['touchstart', 'mousemove', 'mousedown', 'keydown', 'scroll'].forEach(evt => {
+            document.addEventListener(evt, resetPrivacyTimer, { passive: true });
+        });
+
         window.addEventListener('scroll', () => {
             const header = document.getElementById('mainHeader');
             if(window.scrollY > 10) header.classList.add('header-shrink');
@@ -577,12 +419,12 @@
             
             document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
             document.querySelectorAll('button[id^="tabBtn-"]').forEach(btn => {
-                btn.className = "px-4 py-2 text-[11px] sm:text-sm font-bold rounded-lg transition-all text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200";
+                btn.className = "px-4 py-2 text-[11px] sm:text-sm font-bold rounded-lg transition-all flex-1 text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200";
             });
 
-            const activeBtnClass = "px-4 py-2 text-[11px] sm:text-sm font-bold rounded-lg transition-all bg-white dark:bg-slate-700 shadow-sm text-brand-700 dark:text-blue-300";
+            const activeBtnClass = "px-4 py-2 text-[11px] sm:text-sm font-bold rounded-lg transition-all flex-1 bg-white dark:bg-slate-700 shadow-sm text-brand-700 dark:text-blue-300";
             const btn = document.getElementById(`tabBtn-${tab}`);
-            if(btn) btn.className = tab === 'tool' ? activeBtnClass + " flex items-center gap-1" : activeBtnClass;
+            if(btn) btn.className = activeBtnClass;
 
             const fab = document.getElementById('mainFabBtn');
             const searchSort = document.getElementById('searchSortArea');
@@ -597,11 +439,6 @@
                 fab.classList.add('hidden');
                 searchSort.classList.add('hidden');
                 renderHistory();
-            } else if (tab === 'tool') {
-                document.getElementById('tab-tool').classList.add('active');
-                fab.classList.add('hidden');
-                searchSort.classList.add('hidden');
-                updateHeader();
             }
         }
 
@@ -616,7 +453,6 @@
         }
         function closeSheet(sheetId) { document.getElementById(sheetId).classList.add('hidden-sheet'); }
 
-        // --- Custom Dialog System ---
         let dialogConfirmCallback = null;
         function showConfirm(title, message, callback, btnText = "Ya", btnColor = "bg-brand-600", requireInput = false) {
             document.getElementById('dialogTitle').innerText = title;
@@ -684,7 +520,6 @@
             setTimeout(() => overlay.classList.add('hidden'), 200);
         }
 
-        // --- List Management ---
         function getCurrentList() { return currentTab === 'utangSaya' ? appData.utangSaya : appData.ngutangin; }
         function findPersonById(personId) {
             let person = appData.ngutangin.find(p => p.id === personId);
@@ -716,7 +551,6 @@
             }, "Hapus", "bg-red-500 hover:bg-red-600");
         }
 
-        // --- Bulk Add Item ---
         function triggerAddBulkItem(personId, personName, event) {
             event.stopPropagation();
             document.getElementById('addItemPersonId').value = personId;
@@ -753,9 +587,6 @@
             if (!dateInput || rows.length === 0) return;
             const { person } = findPersonById(personId);
             if (!person) return;
-
-            const d = new Date(dateInput);
-            const formattedDate = `${d.getDate()}/${d.getMonth() + 1}`; 
             
             let addedCount = 0;
             rows.forEach(row => {
@@ -766,7 +597,7 @@
                 if (name && price > 0) {
                     person.items.unshift({
                         id: 'i_' + Date.now().toString() + Math.random().toString().substr(2,4),
-                        date: formattedDate,
+                        date: getShortDate(dateInput),
                         rawDate: dateInput,
                         dueDate: dueDateInput,
                         name: name,
@@ -797,7 +628,6 @@
             }, "Hapus", "bg-red-500 hover:bg-red-600");
         }
 
-        // --- Payments ---
         function triggerPayment(personId, itemId, event) {
             event.stopPropagation();
             const { person } = findPersonById(personId);
@@ -916,7 +746,7 @@
 
         function shareWhatsApp(personId, event) {
             event.stopPropagation();
-            const { person } = findPersonById(personId);
+            const { person, sourceList } = findPersonById(personId);
             if (!person || person.items.length === 0) return;
 
             let totalSisa = 0; let message = '';
@@ -924,6 +754,7 @@
                 totalSisa += item.remainingPrice;
                 const historyText = (item.paymentHistory && item.paymentHistory.length > 0) ? `(Telah dicicil: ${item.paymentHistory.map(n => formatNumber(n)).join(', ')})` : '';
                 message += `${item.date} ${item.name} = Rp ${formatNumber(item.originalPrice)}${historyText}\n`;
+                if(item.paymentHistory && item.paymentHistory.length > 0) message += `Sisa = Rp ${formatNumber(item.remainingPrice)}\n`;
             });
             message += `\n= Total: Rp ${formatNumber(totalSisa)}`;
 
@@ -932,7 +763,6 @@
             window.open(whatsappUrl, '_blank');
         }
 
-        // --- Render UI ---
         function calculatePersonDebt(person) { return person.items.reduce((total, i) => total + i.remainingPrice, 0); }
 
         function updateHeader() {
@@ -955,7 +785,7 @@
                     <p class="text-blue-100 dark:text-slate-400 text-[10px] font-semibold mb-0.5 uppercase tracking-wider">TOTAL UTANG SAYA</p>
                     <h2 class="header-amount text-3xl font-extrabold tracking-tight truncate transition-all money-value">${displayUtangSaya}</h2>
                 `;
-            } else if (currentTab === 'history' || currentTab === 'tool') {
+            } else if (currentTab === 'history') {
                 container.innerHTML = `
                     <div class="flex justify-between items-center">
                         <div class="flex-1">
@@ -1049,7 +879,6 @@
                                 </div>
                                 <div class="flex flex-col items-end gap-1">
                                     <div class="text-right">
-                                        <div class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">SISA</div>
                                         <div class="font-black text-red-500 dark:text-red-400 text-[15px] money-value tracking-tight">${formatNumber(personTotalDebt)}</div>
                                     </div>
                                     <div class="text-slate-300 dark:text-slate-500 transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}"><i class="ph-bold ph-caret-up text-lg"></i></div>
@@ -1081,7 +910,6 @@
             updateHeader();
         }
 
-        // --- History ---
         function updateHistoryFilters() {
             const filter = document.getElementById('historyFilter');
             const currentVal = filter.value;
@@ -1133,7 +961,6 @@
             showConfirm("Hapus Semua Riwayat?", "Riwayat tidak bisa dikembalikan.", () => { appData.history = []; saveData(); }, "Hapus", "bg-red-500 hover:bg-red-600", true);
         }
 
-        // --- Settings & Extra ---
         function exportData() {
             const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([JSON.stringify(appData)], { type: 'application/json' }));
             a.download = `Backup_Ngutang_${new Date().toLocaleDateString('id-ID').replace(/\//g, '-')}.json`; a.click(); closeSheet('settingsSheet');
@@ -1164,310 +991,7 @@
             else { icon.classList.replace('ph-sun', 'ph-moon'); metaTheme.setAttribute('content', '#2563eb'); }
         }
 
-        function togglePrivacyMode() {
-            settings.privacyMode = !settings.privacyMode; saveSettings();
-            const icon = document.getElementById('privacyIcon');
-            if(settings.privacyMode) { document.body.classList.add('privacy-on'); icon.classList.replace('ph-eye', 'ph-eye-closed'); } 
-            else { document.body.classList.remove('privacy-on'); icon.classList.replace('ph-eye-closed', 'ph-eye'); }
-            
-            if (currentTab === 'ngutangin' || currentTab === 'utangSaya') { renderUI(); }
-            else if (currentTab === 'history') { renderHistory(); }
-            else { updateHeader(); }
-        }
-
-        // --- STREAMING_CHUNK:PIN Lock System ---
-        function updatePinSettingsUI() {
-            document.getElementById('pinStatusText').innerText = settings.pin ? 'Aktif' : 'Mati';
-            document.getElementById('pinRemoveBtn').classList.toggle('hidden', !settings.pin);
-        }
-
-        function showPinOverlay(mode) {
-            pinMode = mode; enteredPin = ''; tempPin = ''; updatePinDots();
-            const overlay = document.getElementById('pinOverlay');
-            const title = document.getElementById('pinTitle');
-            const sub = document.getElementById('pinSubtitle');
-            
-            document.getElementById('pinCancelBtn').classList.toggle('invisible', mode === 'check');
-            
-            if (mode === 'setup') { title.innerText = "Buat PIN Baru"; sub.innerText = "Masukkan 4 digit PIN pengaman."; }
-            else if (mode === 'confirm') { title.innerText = "Konfirmasi PIN"; sub.innerText = "Masukkan kembali 4 digit PIN."; }
-            else if (mode === 'check') { title.innerText = "Masukkan PIN"; sub.innerText = "Aplikasi terkunci."; }
-            
-            overlay.classList.remove('hidden'); setTimeout(() => overlay.classList.add('opacity-100'), 10);
-        }
-
-        function hidePinOverlay() {
-            const overlay = document.getElementById('pinOverlay'); overlay.classList.remove('opacity-100');
-            setTimeout(() => overlay.classList.add('hidden'), 300);
-        }
-
-        function pressPin(num) {
-            if (enteredPin.length < 4) { enteredPin += num; updatePinDots(); }
-            if (enteredPin.length === 4) setTimeout(processPin, 100);
-        }
-        function deletePin() { if (enteredPin.length > 0) { enteredPin = enteredPin.slice(0, -1); updatePinDots(); } }
-        function updatePinDots() {
-            const dots = document.querySelectorAll('.pin-dot');
-            dots.forEach((dot, idx) => {
-                if (idx < enteredPin.length) dot.classList.replace('bg-slate-300', 'bg-brand-500');
-                else dot.classList.replace('bg-brand-500', 'bg-slate-300');
-                // Dark mode adjustment via specific override is cleaner:
-                if(idx < enteredPin.length) { dot.classList.remove('dark:bg-slate-700'); dot.classList.add('dark:bg-brand-400'); }
-                else { dot.classList.add('dark:bg-slate-700'); dot.classList.remove('dark:bg-brand-400'); }
-            });
-        }
-
-        function processPin() {
-            if (pinMode === 'check') {
-                if (btoa(enteredPin) === settings.pin) hidePinOverlay();
-                else { alert('PIN Salah!'); enteredPin = ''; updatePinDots(); }
-            } else if (pinMode === 'setup') {
-                tempPin = enteredPin; showPinOverlay('confirm');
-            } else if (pinMode === 'confirm') {
-                if (enteredPin === tempPin) {
-                    settings.pin = btoa(enteredPin); saveSettings(); updatePinSettingsUI();
-                    hidePinOverlay(); showAlert("Sukses", "PIN berhasil disimpan."); closeSheet('settingsSheet');
-                } else { alert('PIN tidak cocok! Coba lagi.'); showPinOverlay('setup'); }
-            }
-        }
-
-        function togglePINSetup() { if (settings.pin) showPinOverlay('setup'); else showPinOverlay('setup'); }
-        function cancelPinSetup() { hidePinOverlay(); }
-        function removePin() {
-            if(confirm("Matikan kunci PIN?")) { settings.pin = null; saveSettings(); updatePinSettingsUI(); hidePinOverlay(); closeSheet('settingsSheet'); }
-        }
-
-        // --- STREAMING_CHUNK:AI Split Bill Tool ---
-        function openSplitBill() {
-            document.getElementById('splitBillView').classList.add('active');
-            renderSplitBillUI();
-        }
-        function closeSplitBill() { document.getElementById('splitBillView').classList.remove('active'); }
-        function openSplitSettings() {
-            document.getElementById('apiKeyInput').value = settings.apiKey;
-            document.getElementById('apiModelSelect').value = settings.aiModel;
-            document.getElementById('testApiResult').innerText = '';
-            openSheet('splitSettingsSheet');
-        }
-
-        function saveApiSettings() {
-            settings.apiKey = document.getElementById('apiKeyInput').value.trim();
-            settings.aiModel = document.getElementById('apiModelSelect').value;
-            saveSettings(); renderSplitBillUI(); closeSheet('splitSettingsSheet');
-        }
-
-        async function testApiKey() {
-            const key = document.getElementById('apiKeyInput').value.trim();
-            const resEl = document.getElementById('testApiResult');
-            if(!key) { resEl.innerHTML = '<span class="text-red-500">Key kosong!</span>'; return; }
-            resEl.innerHTML = '<span class="text-slate-500">Mengecek...</span>';
-            try {
-                // Perbaikan: Gunakan endpoint v1beta list models yang valid dan gratis (tidak butuh kuota generasi konten)
-                const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${key}`);
-                if(res.ok) resEl.innerHTML = '<span class="text-emerald-500">✅ API Key Valid!</span>';
-                else resEl.innerHTML = `<span class="text-red-500">❌ Error ${res.status}: Key salah / limit.</span>`;
-            } catch(e) { resEl.innerHTML = '<span class="text-red-500">❌ Gagal koneksi internet.</span>'; }
-        }
-
-        function renderSplitBillUI() {
-            const apiAlert = document.getElementById('apiAlert');
-            const btnScan = document.getElementById('btnScanImage');
-            if (!settings.apiKey) {
-                apiAlert.classList.remove('hidden'); btnScan.classList.add('opacity-50', 'pointer-events-none');
-            } else {
-                apiAlert.classList.add('hidden'); btnScan.classList.remove('opacity-50', 'pointer-events-none');
-            }
-
-            const list = document.getElementById('splitItemsList');
-            if (splitItems.length === 0) { list.innerHTML = `<div class="text-center p-8 text-slate-400 border border-dashed border-slate-300 dark:border-slate-700 rounded-2xl text-sm italic">Belum ada barang ditambahkan.</div>`; document.getElementById('btnFinishSplit').disabled = true; return; }
-            
-            document.getElementById('btnFinishSplit').disabled = false;
-            list.innerHTML = splitItems.map((item, idx) => `
-                <div class="bg-white dark:bg-slate-800 p-3 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm flex flex-col gap-2">
-                    <div class="flex justify-between items-center">
-                        <input type="text" value="${item.name}" onchange="updateSplitItem(${idx}, 'name', this.value)" class="font-bold text-sm bg-transparent border-none outline-none text-slate-800 dark:text-slate-100 flex-1">
-                        <div class="flex items-center gap-2">
-                            <span class="text-xs font-bold text-slate-400">Rp</span>
-                            <input type="text" inputmode="numeric" value="${formatNumber(item.price)}" oninput="formatPriceInput(this)" onchange="updateSplitItem(${idx}, 'price', getRawNumber(this.value))" class="w-24 text-right font-black bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded px-2 py-1 text-sm outline-none focus:ring-1 focus:ring-brand-500">
-                            <button onclick="removeSplitItem(${idx})" class="text-slate-400 hover:text-red-500 p-1"><i class="ph-bold ph-x"></i></button>
-                        </div>
-                    </div>
-                    <div class="border-t border-slate-100 dark:border-slate-700 pt-2 flex justify-between items-center">
-                        <div class="text-[11px] text-slate-500 dark:text-slate-400 font-medium truncate max-w-[70%]">
-                            ${item.assignedTo.length > 0 ? `Bagi ke: <span class="text-brand-600 dark:text-brand-400 font-bold">${item.assignedTo.join(', ')}</span>` : '<span class="text-orange-500">Belum ada yang dipilih</span>'}
-                        </div>
-                        <button onclick="openAssignSheet(${item.id})" class="text-[10px] font-bold bg-brand-50 dark:bg-brand-900/30 text-brand-600 dark:text-brand-400 px-2 py-1 rounded hover:bg-brand-100">
-                            Pilih Orang
-                        </button>
-                    </div>
-                </div>
-            `).join('');
-        }
-
-        function addManualSplitItem() { splitItems.push({ id: Date.now(), name: 'Item Baru', price: 0, assignedTo: [] }); renderSplitBillUI(); }
-        function removeSplitItem(idx) { splitItems.splice(idx, 1); renderSplitBillUI(); }
-        function updateSplitItem(idx, key, val) { splitItems[idx][key] = val; renderSplitBillUI(); }
-
-        async function processReceipt(event) {
-            const file = event.target.files[0]; if(!file || !settings.apiKey) return;
-            document.getElementById('aiLoading').classList.remove('hidden');
-            event.target.value = ''; // reset input
-            
-            const reader = new FileReader();
-            reader.onloadend = async () => {
-                const base64Data = reader.result.split(',')[1];
-                try {
-                    const reqBody = {
-                        contents: [{ parts: [
-                            { text: "Ekstrak nama barang dan harga dari struk ini. Abaikan pajak, diskon, dan total." },
-                            { inline_data: { mime_type: file.type, data: base64Data } }
-                        ]}],
-                        generationConfig: { 
-                            response_mime_type: "application/json",
-                            response_schema: {
-                                type: "ARRAY",
-                                items: {
-                                    type: "OBJECT",
-                                    properties: {
-                                        name: { type: "STRING" },
-                                        price: { type: "INTEGER" }
-                                    },
-                                    required: ["name", "price"]
-                                }
-                            }
-                        }
-                    };
-                    
-                    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${settings.aiModel}:generateContent?key=${settings.apiKey}`, {
-                        method: 'POST', headers: {'Content-Type': 'application/json'},
-                        body: JSON.stringify(reqBody)
-                    });
-                    
-                    if (!res.ok) {
-                        const errData = await res.json();
-                        throw new Error(errData.error?.message || `HTTP Error ${res.status}`);
-                    }
-                    
-                    const data = await res.json();
-                    if(!data.candidates || data.candidates.length === 0) throw new Error("Respons AI kosong (mungkin terblokir filter keamanan).");
-                    
-                    let text = data.candidates[0].content.parts[0].text;
-                    
-                    // Bersihkan karakter markdown JSON jika AI membandel
-                    text = text.replace(/```json/gi, '').replace(/```/g, '').trim();
-                    
-                    let parsed;
-                    try {
-                        parsed = JSON.parse(text);
-                    } catch (e) {
-                        // Jika JSON AI benar-benar rusak, tangkap dan tampilkan isi teksnya
-                        throw new Error("Format data dari AI rusak. Teks asli: " + text.substring(0, 50) + "...");
-                    }
-                    
-                    if(Array.isArray(parsed) && parsed.length > 0) {
-                        parsed.forEach(i => { if(i.name && i.price != null) splitItems.push({ id: Date.now()+Math.random(), name: i.name, price: Number(i.price), assignedTo: [] }); });
-                        renderSplitBillUI();
-                    } else {
-                        throw new Error("Struk tidak terdeteksi atau format data dari AI salah.");
-                    }
-                } catch (err) { 
-                    showAlert("AI Error", `Gagal membaca struk.<br><br><div class="text-xs text-red-500 font-mono text-left block mt-3 p-3 bg-red-50 dark:bg-red-900/30 rounded-lg border border-red-100 dark:border-red-800 break-words max-h-32 overflow-y-auto">${err.message}</div>`); 
-                } finally {
-                    document.getElementById('aiLoading').classList.add('hidden');
-                }
-            };
-            reader.readAsDataURL(file);
-        }
-
-        // --- Assign People Flow ---
-        function openAssignSheet(itemId) {
-            activeSplitItemId = itemId;
-            const item = splitItems.find(i => i.id === itemId);
-            if(!item) return;
-            
-            document.getElementById('assignItemName').innerText = item.name;
-            renderAssignList();
-            openSheet('assignSplitSheet');
-        }
-
-        function renderAssignList() {
-            const container = document.getElementById('assignPeopleList');
-            const item = splitItems.find(i => i.id === activeSplitItemId);
-            if(!item) return;
-
-            // Gabungkan nama dari daftar Ngutangin dan nama sementara yang baru diinput
-            const existingNames = appData.ngutangin.map(p => p.name);
-            const allNames = [...new Set([...existingNames, ...tempSplitPeople])];
-
-            if(allNames.length === 0) {
-                container.innerHTML = `<div class="text-sm text-slate-400 italic text-center py-4">Belum ada teman. Tambahkan nama di bawah.</div>`;
-                return;
-            }
-
-            // Render Checkboxes
-            container.innerHTML = allNames.map(name => {
-                const isChecked = item.assignedTo.includes(name);
-                return `
-                <label class="flex items-center gap-3 p-3 bg-slate-50 dark:bg-slate-900/50 rounded-xl border border-slate-200 dark:border-slate-700 cursor-pointer hover:border-brand-300 dark:hover:border-brand-600 transition-colors">
-                    <input type="checkbox" value="${name}" class="assign-cb custom-checkbox" ${isChecked ? 'checked' : ''}>
-                    <span class="font-bold text-slate-700 dark:text-slate-200">${name}</span>
-                </label>
-                `;
-            }).join('');
-        }
-
-        function addTempPersonSplit() {
-            const input = document.getElementById('assignNewName');
-            const name = input.value.trim();
-            if(!name) return;
-            
-            // Tambahkan ke memori sementara jika belum ada
-            if(!tempSplitPeople.includes(name) && !appData.ngutangin.find(p => p.name === name)) {
-                tempSplitPeople.push(name);
-            }
-            
-            input.value = '';
-            renderAssignList(); // Segarkan daftar agar nama baru muncul
-        }
-
-        function saveAssignSplit() {
-            const cbs = document.querySelectorAll('.assign-cb:checked');
-            const item = splitItems.find(i => i.id === activeSplitItemId);
-            item.assignedTo = Array.from(cbs).map(cb => cb.value);
-            closeSheet('assignSplitSheet'); renderSplitBillUI();
-        }
-
-        function finalizeSplitBill() {
-            if(splitItems.some(i => i.assignedTo.length === 0)) { showAlert("Ops!", "Ada item yang belum dipilih orangnya."); return; }
-            
-            const todayStr = getTodayDate();
-            const formattedDate = `${new Date().getDate()}/${new Date().getMonth() + 1}`;
-            let hasNewPerson = false;
-
-            splitItems.forEach(item => {
-                const splitPrice = Math.round(item.price / item.assignedTo.length);
-                item.assignedTo.forEach(name => {
-                    let person = appData.ngutangin.find(p => p.name === name);
-                    if (!person) {
-                        person = { id: 'p_' + Date.now()+Math.random(), name: name, phone: '', notes: '', items: [] };
-                        appData.ngutangin.unshift(person);
-                        hasNewPerson = true;
-                    }
-                    person.items.unshift({
-                        id: 'i_' + Date.now()+Math.random(),
-                        date: formattedDate, rawDate: todayStr, dueDate: '',
-                        name: `[Split] ${item.name}`, originalPrice: splitPrice, paidAmount: 0, remainingPrice: splitPrice, paymentHistory: []
-                    });
-                });
-            });
-
-            splitItems = []; tempSplitPeople = []; 
-            closeSplitBill(); saveData(); 
-            showAlert("Berhasil", "Semua bon telah dibagi rata dan dimasukkan ke daftar Ngutangin.");
-            switchTab('ngutangin');
-        }
-
-        // --- PWA Initialization ---
+        // PWA Initialization
         (function setupPWA() {
             const manifest = {
                 name: "Ngutang", short_name: "Ngutang", start_url: ".", display: "standalone",
@@ -1482,14 +1006,18 @@
             document.getElementById('installBtn').addEventListener('click', async () => { if (deferredPrompt) { deferredPrompt.prompt(); await deferredPrompt.userChoice; deferredPrompt = null; document.getElementById('installBtn').classList.add('hidden'); } closeSheet('settingsSheet'); });
         })();
 
-        // --- INIT ---
+        // INIT
         loadData();
-        if(settings.privacyMode) { document.body.classList.add('privacy-on'); document.getElementById('privacyIcon').classList.replace('ph-eye', 'ph-eye-closed'); }
-        updatePinSettingsUI();
-        switchTab(settings.lastTab);
         
-        // Show Lock Screen if PIN exists
-        if(settings.pin) showPinOverlay('check');
+        // Initial Privacy UI Setup
+        if(settings.privacyMode) { 
+            document.body.classList.add('privacy-on'); 
+            document.getElementById('privacyIcon').classList.replace('ph-eye', 'ph-eye-closed'); 
+        } else {
+            resetPrivacyTimer();
+        }
+
+        switchTab(settings.lastTab);
 
     </script>
 </body>
